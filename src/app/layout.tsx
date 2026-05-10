@@ -1,21 +1,16 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TalentLens | See Beyond the CV",
-  description:
-    "Africa's evidence-first talent intelligence platform. Replace CVs with verified proof.",
-  keywords: ["talent", "hiring", "Rwanda", "AI screening", "Opportunity in Rwanda", "talent intelligence", "skills verification", "data-driven hiring"],
+  title: "TalentLens | Evidence-First Talent Intelligence",
+  description: "Replace CVs with verified proof. The smart hiring platform for Rwanda.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="bg-[#080D1A] text-[#EDF2F7] font-body antialiased">
+      <body className="bg-slate-50 text-slate-900 antialiased">
         {children}
       </body>
     </html>

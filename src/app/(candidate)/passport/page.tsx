@@ -1,23 +1,23 @@
 "use client";
 
-import { Share2, Download, CheckCircle, Target, BookOpen, Flame, User, ExternalLink } from "lucide-react";
+import { Share2, Download, CheckCircle2, Target, BookOpen, Flame, User, ShieldCheck } from "lucide-react";
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
 import Sidebar from "@/components/layout/Sidebar";
-import { ScoreRing, ProgressBar, SectionHeader, ModuleBadge, MatchLevelDot } from "@/components/shared";
+import { ProgressBar, ModuleBadge } from "@/components/shared";
 import { mockCandidateProfile, mockTalentSignal, mockMissionAttempts } from "@/lib/mock-data";
 
 const radarData = [
-  { subject: "Skill Proof", A: 74 },
-  { subject: "Judgment", A: 68 },
-  { subject: "Learning", A: 82 },
-  { subject: "Communication", A: 71 },
+  { subject: "Skill", A: 74 },
+  { subject: "Behavior", A: 68 },
+  { subject: "Agility", A: 82 },
+  { subject: "Comms", A: 71 },
 ];
 
 const dimensions = [
-  { key: "skill_proof_score", label: "Skill Proof", desc: "Demonstrated competence through real-world missions", icon: Target, color: "#10B981", score: 74 },
-  { key: "work_behavior_score", label: "Work Behavior", desc: "Judgment, ethics, and professional decision-making", icon: BookOpen, color: "#F59E0B", score: 68 },
-  { key: "learning_agility_score", label: "Learning Agility", desc: "Speed and accuracy of learning under pressure", icon: Flame, color: "#3B82F6", score: 82 },
-  { key: "culture_fit_score", label: "Communication", desc: "Clarity, structure, and professionalism of expression", icon: User, color: "#A855F7", score: 71 },
+  { key: "skill_proof", label: "Skill Proof", desc: "Technical competence via real-world execution", icon: Target, score: 74 },
+  { key: "work_behavior", label: "Work Behavior", desc: "Professional judgment & ethical decision-making", icon: BookOpen, score: 68 },
+  { key: "learning_agility", label: "Learning Agility", desc: "Speed of skill acquisition under pressure", icon: Flame, score: 82 },
+  { key: "culture_fit", label: "Communication", desc: "Clarity, structure, and professional articulation", icon: User, score: 71 },
 ];
 
 export default function PassportPage() {
@@ -25,177 +25,125 @@ export default function PassportPage() {
   const signal = mockTalentSignal;
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#080D1A" }}>
+    <div className="flex min-h-screen bg-slate-50 text-slate-900 font-sans">
       <Sidebar role="candidate" userName={profile.full_name} userLocation={profile.location} />
 
-      <main className="flex-1 ml-64 p-8 bg-grid">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-8 animate-fade-up">
+      <main className="flex-1 ml-64 p-8 max-w-6xl mx-auto">
+        <div className="flex items-start justify-between mb-8 animate-fade-up border-b border-slate-200 pb-6">
           <div>
-            <p style={{ color: "#10B981", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              Your Talent Passport
-            </p>
-            <h1 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.75rem", color: "white", letterSpacing: "-0.02em", marginTop: 4 }}>
-              Verified Capability Record
-            </h1>
-            <p style={{ color: "#4A5C74", fontSize: "0.85rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 2 }}>
-              Earn it once. Carry it everywhere.
-            </p>
+            <p className="text-emerald-600 font-bold text-xs tracking-widest uppercase mb-1 flex items-center gap-1.5"><ShieldCheck size={14}/> Verified Identity</p>
+            <h1 className="font-extrabold text-3xl text-slate-900 tracking-tight">Talent Passport</h1>
+            <p className="text-slate-500 mt-1">Your immutable record of demonstrated capabilities.</p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm transition-colors hover:bg-white/5"
-              style={{ border: "1px solid #253350", color: "#94A3B8", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600 }}>
-              <Share2 size={14} /> Share Passport
+            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm">
+              <Share2 size={16} /> Copy Link
             </button>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-primary">
-              <Download size={14} /> Export PDF
+            <button className="bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-colors">
+              <Download size={16} /> Export Document
             </button>
           </div>
         </div>
 
-        {/* Passport card */}
-        <div className="card-base p-0 overflow-hidden mb-8 animate-fade-up" style={{ animationDelay: "100ms" }}>
-          {/* Passport header */}
-          <div className="px-8 py-6 relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, #10B98120 0%, #0A1120 60%)", borderBottom: "1px solid #1E2D45" }}>
-            <div className="absolute right-8 top-4 opacity-5" style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "8rem", lineHeight: 1, color: "#10B981", userSelect: "none" }}>
-              TSS
-            </div>
-            <div className="flex items-center gap-8 relative z-10">
-              {/* Avatar */}
-              <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold shrink-0"
-                style={{ background: "#10B98125", border: "2px solid #10B98140", fontFamily: "var(--font-syne, sans-serif)", color: "#10B981" }}>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8 animate-fade-up delay-100">
+          <div className="px-8 py-8 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 rounded-2xl bg-white border-2 border-emerald-100 flex items-center justify-center text-3xl font-extrabold text-slate-800 shadow-sm">
                 {profile.full_name.split(" ").map(n => n[0]).join("")}
               </div>
-              {/* Identity */}
-              <div className="flex-1">
+              <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <h2 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.4rem", color: "white", letterSpacing: "-0.02em" }}>
-                    {profile.full_name}
-                  </h2>
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: "#10B98115", border: "1px solid #10B98130" }}>
-                    <CheckCircle size={11} color="#10B981" />
-                    <span style={{ color: "#10B981", fontSize: "0.65rem", fontWeight: 600, fontFamily: "var(--font-syne, sans-serif)", letterSpacing: "0.06em" }}>VERIFIED</span>
-                  </div>
+                  <h2 className="font-extrabold text-2xl text-slate-900 tracking-tight">{profile.full_name}</h2>
+                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold uppercase tracking-wider">
+                    <CheckCircle2 size={12} /> AI Verified
+                  </span>
                 </div>
-                <p style={{ color: "#94A3B8", fontSize: "0.9rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>
-                  {profile.role_family} · {profile.location}
-                </p>
-                <p style={{ color: "#4A5C74", fontSize: "0.78rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 4 }}>
-                  Passport since {new Date(profile.created_at).toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
-                  · Last updated {new Date(signal.updated_at).toLocaleDateString("en-GB", { month: "short", day: "numeric", year: "numeric" })}
+                <p className="text-slate-600 font-medium text-sm">{profile.role_family} · {profile.location}</p>
+                <p className="text-xs text-slate-400 mt-2 font-mono">
+                  ID: TL-{profile.id.substring(0,8).toUpperCase()} · ISSUED: {new Date().toLocaleDateString()}
                 </p>
               </div>
-              {/* TSS score */}
-              <div className="text-right shrink-0">
-                <ScoreRing score={signal.overall_tss} size={90} label="Overall TSS" color="#10B981" />
+            </div>
+            
+            <div className="text-center bg-white px-8 py-5 rounded-xl border border-slate-200 shadow-sm min-w-[160px]">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Talent Signal Score</p>
+              <div className="flex items-baseline justify-center gap-1">
+                <span className="font-extrabold text-5xl text-blue-600 tracking-tighter">{signal.overall_tss}</span>
+                <span className="text-slate-400 font-bold">/100</span>
               </div>
             </div>
           </div>
 
-          {/* Dimensions */}
-          <div className="p-8">
-            <div className="grid grid-cols-12 gap-8">
-              {/* Radar */}
-              <div className="col-span-4">
-                <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", fontSize: "0.85rem", marginBottom: 16 }}>
-                  Signal Profile
-                </p>
-                <ResponsiveContainer width="100%" height={180}>
-                  <RadarChart data={radarData}>
-                    <PolarGrid stroke="#1E2D45" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: "#4A5C74", fontSize: 9, fontFamily: "var(--font-syne, sans-serif)" }} />
-                    <Radar dataKey="A" stroke="#10B981" fill="#10B981" fillOpacity={0.12} strokeWidth={2} />
+          <div className="p-8 grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div className="lg:col-span-5 flex flex-col items-center justify-center bg-white p-6 rounded-2xl border border-slate-100">
+              <p className="font-bold text-xs text-slate-500 uppercase tracking-widest mb-2 w-full text-center">Competency Radar</p>
+              <div className="w-full h-[240px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                    <PolarGrid stroke="#E2E8F0" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: "#64748B", fontSize: 11, fontWeight: 600 }} />
+                    <Radar dataKey="A" stroke="#2563EB" fill="#3B82F6" fillOpacity={0.15} strokeWidth={2.5} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
-              {/* Dimension bars */}
-              <div className="col-span-8 space-y-5">
-                <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", fontSize: "0.85rem", marginBottom: 16 }}>
-                  Evidence Dimensions
-                </p>
-                {dimensions.map((dim) => {
-                  const Icon = dim.icon;
-                  return (
-                    <div key={dim.key}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${dim.color}15`, border: `1px solid ${dim.color}30` }}>
-                            <Icon size={13} color={dim.color} strokeWidth={1.5} />
-                          </div>
-                          <div>
-                            <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "white", fontSize: "0.82rem" }}>{dim.label}</p>
-                            <p style={{ color: "#4A5C74", fontSize: "0.7rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>{dim.desc}</p>
-                          </div>
-                        </div>
-                        <span style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, fontSize: "0.9rem", color: dim.score > 0 ? "white" : "#4A5C74" }}>
-                          {dim.score > 0 ? `${dim.score}/100` : "—"}
-                        </span>
+            </div>
+
+            <div className="lg:col-span-7 space-y-6 flex flex-col justify-center">
+              {dimensions.map((dim) => (
+                <div key={dim.key} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                        <dim.icon size={16} className="text-slate-700" strokeWidth={2} />
                       </div>
-                      <ProgressBar value={dim.score} color={dim.color} height={5} showLabel={false} />
+                      <div>
+                        <p className="font-bold text-sm text-slate-900">{dim.label}</p>
+                        <p className="text-xs text-slate-500">{dim.desc}</p>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
+                    <span className="font-extrabold text-slate-900">{dim.score}<span className="text-slate-400 text-xs">/100</span></span>
+                  </div>
+                  <ProgressBar value={dim.score} color="#2563EB" height={6} showLabel={false} />
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Evidence log */}
-        <div className="card-base p-6 animate-fade-up" style={{ animationDelay: "200ms" }}>
-          <SectionHeader title="Evidence Log" subtitle="Every score backed by real work" />
+        <div className="animate-fade-up delay-200">
+          <h3 className="font-bold text-lg text-slate-900 mb-4 px-1">Immutable Evidence Log</h3>
           <div className="space-y-4">
             {mockMissionAttempts.map((attempt) => (
-              <div key={attempt.id} className="p-5 rounded-xl" style={{ border: "1px solid #1E2D45" }}>
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", fontSize: "0.9rem" }}>
-                        {attempt.mission?.title}
-                      </h3>
-                      <ModuleBadge type={attempt.mission?.module_type ?? "skill_proof"} />
-                    </div>
-                    <p style={{ color: "#4A5C74", fontSize: "0.78rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>
-                      Submitted {new Date(attempt.submitted_at ?? "").toLocaleDateString("en-GB", { month: "short", day: "numeric", year: "numeric" })}
-                      · Scored in &lt;60s by Gemini AI
-                    </p>
+              <div key={attempt.id} className="p-6 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col md:flex-row gap-6 hover:border-slate-300 transition-colors">
+                
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <ModuleBadge type={attempt.mission?.module_type} />
+                    <h4 className="font-bold text-slate-900 tracking-tight">{attempt.mission?.title}</h4>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.5rem", color: "white", letterSpacing: "-0.03em" }}>
-                      {attempt.total_score}
-                      <span style={{ color: "#4A5C74", fontSize: "0.8rem", fontWeight: 400 }}>/100</span>
-                    </p>
-                  </div>
-                </div>
-                {/* Dimension scores */}
-                <div className="grid grid-cols-4 gap-3">
-                  {attempt.dimension_scores?.map((ds) => (
-                    <div key={ds.dimension} className="p-3 rounded-lg" style={{ background: "#080D1A", border: "1px solid #1E2D45" }}>
-                      <div className="flex items-center justify-between mb-1">
-                        <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.68rem", color: "#94A3B8" }}>
-                          {ds.dimension}
-                        </p>
-                        <span style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, fontSize: "0.82rem", color: "white" }}>
-                          {ds.score}/{ds.max_score}
-                        </span>
+                  <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                    <span className="font-semibold text-slate-800">AI Finding: </span>
+                    {attempt.overall_summary}
+                  </p>
+                  <div className="flex gap-4">
+                    {attempt.dimension_scores?.slice(0,2).map((ds) => (
+                      <div key={ds.dimension} className="flex-1 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] font-bold uppercase text-slate-500">{ds.dimension}</span>
+                          <span className="text-xs font-bold text-emerald-700">{ds.score}/{ds.max_score}</span>
+                        </div>
+                        <ProgressBar value={ds.score} max={ds.max_score} height={4} showLabel={false} color="#059669" />
                       </div>
-                      <ProgressBar value={ds.score} max={ds.max_score} height={3} showLabel={false} />
-                      <p style={{ color: "#4A5C74", fontSize: "0.68rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 6, lineHeight: 1.4 }}>
-                        {ds.evidence.slice(0, 60)}...
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                {/* Overall summary */}
-                <div className="mt-3 p-3 rounded-lg" style={{ background: "#10B98108", border: "1px solid #10B98120" }}>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle size={13} color="#10B981" className="mt-0.5 shrink-0" />
-                    <p style={{ color: "#94A3B8", fontSize: "0.78rem", fontFamily: "var(--font-dm-sans, sans-serif)", lineHeight: 1.5 }}>
-                      <span style={{ color: "#10B981", fontWeight: 600 }}>AI Assessment: </span>
-                      {attempt.overall_summary}
-                    </p>
+                    ))}
                   </div>
                 </div>
+
+                <div className="shrink-0 md:border-l md:border-slate-100 md:pl-6 flex flex-col justify-center items-end text-right">
+                  <span className="font-extrabold text-3xl text-slate-900">{attempt.total_score}</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 mb-2">Module Score</span>
+                  <span className="text-xs text-slate-400 font-mono">{new Date(attempt.submitted_at ?? "").toLocaleDateString()}</span>
+                </div>
+
               </div>
             ))}
           </div>

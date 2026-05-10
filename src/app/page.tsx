@@ -66,8 +66,8 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/95 to-slate-900/40 z-10" />
           <div className="absolute inset-0 bg-[#0F62FE]/10 z-10 mix-blend-color" /> 
           <img 
-            src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=2000" 
-            alt="AI Technology Dashboard" 
+            src="https://res.cloudinary.com/dcgmi6w24/image/upload/v1778404707/Recruiters_make_a_dash_for_tech_talent_at_NITs_1_lf8zkt.jpg" 
+            alt="talent screening with lens flare" 
             className="w-full lg:w-3/4 h-full object-cover opacity-40 mix-blend-luminosity grayscale"
           />
         </div>

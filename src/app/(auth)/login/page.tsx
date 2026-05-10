@@ -30,8 +30,8 @@ export default function LoginPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#050A15]/60 via-transparent to-[#050A15]/90 z-10" />
           <div className="absolute inset-0 bg-[#0F62FE]/20 mix-blend-overlay z-10" />
           <img 
-            src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=1600" 
-            alt="Abstract AI architecture" 
+            src="https://res.cloudinary.com/dcgmi6w24/image/upload/v1778404915/Communicating_across_different_cultures_can_add_a_unique_layer_to_networking__What_s_one_challenge_you_ve_faced_when_networking_internationally_and_how_did_you_overcome_it__Drop_your_experiences_and_tips_for_nav_rhgdth.jpg" 
+            alt="linking global talent with AI" 
             className="w-full h-full object-cover opacity-70 grayscale"
           />
         </div>

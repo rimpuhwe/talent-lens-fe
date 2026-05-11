@@ -2,11 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
-  LayoutDashboard, User, Target, BookOpen, FileText,
-  Briefcase, Users, BarChart3, Settings, LogOut,
-  ChevronRight, Bell, Shield,
+  LayoutDashboard,
+  User,
+  Target,
+  BookOpen,
+  FileText,
+  Briefcase,
+  Users,
+  BarChart3,
+  Settings,
+  LogOut,
+  ChevronRight,
+  Menu,
+  X,
 } from "lucide-react";
+
 import type { UserRole } from "@/types";
 
 interface NavItem {
@@ -43,14 +55,8 @@ const navByRole: Record<UserRole, NavItem[]> = {
 
 const roleColors: Record<UserRole, string> = {
   candidate: "#10B981",
-  recruiter: "#3B82F6",
+  recruiter: "#395886",
   admin: "#F59E0B",
-};
-
-const roleLabels: Record<UserRole, string> = {
-  candidate: "Talent",
-  recruiter: "Recruiter",
-  admin: "Admin",
 };
 
 interface SidebarProps {
@@ -59,94 +65,181 @@ interface SidebarProps {
   userLocation?: string;
 }
 
-export default function Sidebar({ role, userName, userLocation }: SidebarProps) {
+export default function Sidebar({
+  role,
+  userName,
+  userLocation,
+}: SidebarProps) {
   const pathname = usePathname();
   const navItems = navByRole[role];
   const accentColor = roleColors[role];
 
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 flex flex-col z-40"
-      style={{ background: "linear-gradient(180deg, #0A1120 0%, #080D1A 100%)", borderRight: "1px solid #1E2D45" }}>
-
-      {/* Logo */}
-      <div className="px-6 pt-8 pb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: `${accentColor}20`, border: `1px solid ${accentColor}40` }}>
-            <div className="w-3 h-3 rounded-sm" style={{ background: accentColor }} />
-          </div>
-          <div>
-            <p className="font-display font-700 text-sm tracking-wide text-white" style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700 }}>
-              TalentLens
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: accentColor, fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              {roleLabels[role]} Portal
-            </p>
-          </div>
-        </div>
+    <>
+      {/* Mobile Topbar Toggle (Only if TopNav is hidden on mobile) */}
+      <div className="lg:hidden fixed top-[72px] left-0 right-0 z-40 h-12 bg-white/80 backdrop-blur-md border-b border-[#D5DEEF] flex items-center justify-between px-4">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{role} Menu</span>
+        <button
+          onClick={() => setIsOpen(true)}
+          className="p-1.5 rounded-lg border border-[#D5DEEF] text-[#395886]"
+        >
+          <Menu size={18} />
+        </button>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 space-y-0.5">
-        <p className="px-3 mb-3 text-xs font-semibold uppercase tracking-widest" style={{ color: "#4A5C74", fontFamily: "var(--font-syne, sans-serif)" }}>
-          Navigation
-        </p>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link key={item.href} href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative"
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed left-0 z-40 
+          top-[72px] h-[calc(100vh-72px)]
+          w-[280px] sm:w-64
+          bg-white flex flex-col
+          transition-transform duration-300 ease-in-out
+          border-r border-[#D5DEEF]
+
+          lg:translate-x-0
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        {/* Mobile Close */}
+        <div className="lg:hidden flex justify-end px-4 pt-4">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="p-2 rounded-lg border border-[#D5DEEF] text-[#395886]"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Removed redundant logo section since it's now in the TopNav above */}
+
+        {/* Nav */}
+        <nav className="flex-1 px-3 mt-6 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+
+            const isActive =
+              pathname === item.href ||
+              pathname.startsWith(item.href + "/");
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all duration-200 group relative"
+                style={{
+                  background: isActive
+                    ? `${accentColor}12`
+                    : "transparent",
+                  color: isActive ? accentColor : "#628ECB",
+                  borderLeft: isActive
+                    ? `3px solid ${accentColor}`
+                    : "3px solid transparent",
+                  fontFamily: "var(--font-dm-sans, sans-serif)",
+                  fontWeight: isActive ? 600 : 500,
+                }}
+              >
+                <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+
+                <span>{item.label}</span>
+
+                {isActive && (
+                  <ChevronRight
+                    size={12}
+                    className="ml-auto opacity-60"
+                  />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Bottom */}
+        <div
+          className="px-3 pb-6 space-y-1 border-t mt-2 pt-4"
+          style={{ borderColor: "#D5DEEF" }}
+        >
+          <button
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm w-full transition-colors hover:bg-[#F0F3FA]"
+            style={{
+              color: "#628ECB",
+              fontWeight: 500,
+            }}
+          >
+            <Settings size={17} strokeWidth={2} />
+
+            <span
               style={{
-                background: isActive ? `${accentColor}12` : "transparent",
-                color: isActive ? accentColor : "#94A3B8",
-                borderLeft: isActive ? `2px solid ${accentColor}` : "2px solid transparent",
                 fontFamily: "var(--font-dm-sans, sans-serif)",
-                fontWeight: isActive ? 500 : 400,
-              }}>
-              <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
-              <span>{item.label}</span>
-              {isActive && <ChevronRight size={12} className="ml-auto opacity-60" />}
-            </Link>
-          );
-        })}
-      </nav>
+              }}
+            >
+              Settings
+            </span>
+          </button>
 
-      {/* Bottom section */}
-      <div className="px-3 pb-6 space-y-1 border-t" style={{ borderColor: "#1E2D45", paddingTop: "16px", marginTop: "8px" }}>
-        <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full transition-colors hover:bg-white/5"
-          style={{ color: "#94A3B8" }}>
-          <Bell size={16} strokeWidth={1.5} />
-          <span style={{ fontFamily: "var(--font-dm-sans, sans-serif)" }}>Notifications</span>
-          <span className="ml-auto text-xs px-1.5 py-0.5 rounded" style={{ background: `${accentColor}20`, color: accentColor }}>3</span>
-        </button>
-        <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full transition-colors hover:bg-white/5"
-          style={{ color: "#94A3B8" }}>
-          <Settings size={16} strokeWidth={1.5} />
-          <span style={{ fontFamily: "var(--font-dm-sans, sans-serif)" }}>Settings</span>
-        </button>
+          {/* User Card */}
+          <div
+            className="mt-3 p-3 rounded-2xl transition-colors hover:bg-[#D5DEEF]/30"
+            style={{
+              background: "#F0F3FA",
+              border: "1px solid #D5DEEF",
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 shadow-sm"
+                style={{
+                  background: "#FFFFFF",
+                  border: "1px solid #B1C9EF",
+                  color: accentColor,
+                  fontFamily: "var(--font-syne, sans-serif)",
+                }}
+              >
+                {userName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .slice(0, 2)}
+              </div>
 
-        {/* User card */}
-        <div className="mt-3 p-3 rounded-xl" style={{ background: "#111827", border: "1px solid #1E2D45" }}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-              style={{ background: `${accentColor}20`, color: accentColor, fontFamily: "var(--font-syne, sans-serif)" }}>
-              {userName.split(" ").map(n => n[0]).join("").slice(0, 2)}
+              <div className="min-w-0">
+                <p
+                  className="text-xs font-bold truncate text-[#395886]"
+                  style={{
+                    fontFamily: "var(--font-syne, sans-serif)",
+                  }}
+                >
+                  {userName}
+                </p>
+
+                {userLocation && (
+                  <p
+                    className="text-[10px] font-medium truncate"
+                    style={{ color: "#628ECB" }}
+                  >
+                    {userLocation}
+                  </p>
+                )}
+              </div>
+
+              <button className="ml-auto transition-colors shrink-0 p-1.5 rounded-md hover:bg-white text-[#628ECB] hover:text-[#395886]">
+                <LogOut size={14} strokeWidth={2.5} />
+              </button>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium truncate text-white" style={{ fontFamily: "var(--font-syne, sans-serif)" }}>
-                {userName}
-              </p>
-              {userLocation && (
-                <p className="text-xs truncate" style={{ color: "#4A5C74" }}>{userLocation}</p>
-              )}
-            </div>
-            <button className="ml-auto text-gray-600 hover:text-gray-400 transition-colors shrink-0">
-              <LogOut size={14} />
-            </button>
           </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

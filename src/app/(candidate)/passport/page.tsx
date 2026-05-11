@@ -25,7 +25,7 @@ export default function PassportPage() {
   const signal = mockTalentSignal;
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#080D1A" }}>
+    <div className="flex min-h-screen" style={{ background: "#F0F3FA" }}>
       <Sidebar role="candidate" userName={profile.full_name} userLocation={profile.location} />
 
       <main className="flex-1 ml-64 p-8 bg-grid">
@@ -35,7 +35,7 @@ export default function PassportPage() {
             <p style={{ color: "#10B981", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
               Your Talent Passport
             </p>
-            <h1 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.75rem", color: "white", letterSpacing: "-0.02em", marginTop: 4 }}>
+            <h1 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: "bold", fontSize: "1.75rem", color: "#091F5C", letterSpacing: "-0.02em", marginTop: 4 }}>
               Verified Capability Record
             </h1>
             <p style={{ color: "#4A5C74", fontSize: "0.85rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 2 }}>
@@ -43,45 +43,36 @@ export default function PassportPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm transition-colors hover:bg-white/5"
-              style={{ border: "1px solid #253350", color: "#94A3B8", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600 }}>
-              <Share2 size={14} /> Share Passport
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-primary">
-              <Download size={14} /> Export PDF
-            </button>
           </div>
         </div>
 
         {/* Passport card */}
-        <div className="card-base p-0 overflow-hidden mb-8 animate-fade-up" style={{ animationDelay: "100ms" }}>
+        <div className="card-base p-0 overflow-hidden mb-8 animate-fade-up" style={{ animationDelay: "100ms", background: "#F1F5F9" }}>
           {/* Passport header */}
           <div className="px-8 py-6 relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, #10B98120 0%, #0A1120 60%)", borderBottom: "1px solid #1E2D45" }}>
-            <div className="absolute right-8 top-4 opacity-5" style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "8rem", lineHeight: 1, color: "#10B981", userSelect: "none" }}>
-              TSS
-            </div>
+            style={{ background: "linear-gradient(135deg, #21c18c20 0%, #5b6c93 60%)", borderBottom: "1px solid #1E2D45" }}>
+            
             <div className="flex items-center gap-8 relative z-10">
               {/* Avatar */}
               <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold shrink-0"
-                style={{ background: "#10B98125", border: "2px solid #10B98140", fontFamily: "var(--font-syne, sans-serif)", color: "#10B981" }}>
+                style={{ background: "#10B98125", border: "2px solid #0c775340", fontFamily: "var(--font-syne, sans-serif)", color: "#0a563c" }}>
                 {profile.full_name.split(" ").map(n => n[0]).join("")}
               </div>
               {/* Identity */}
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
-                  <h2 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.4rem", color: "white", letterSpacing: "-0.02em" }}>
+                  <h2 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: "bold", fontSize: "1.4rem", color: "#091F5C", letterSpacing: "-0.02em" }}>
                     {profile.full_name}
                   </h2>
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: "#10B98115", border: "1px solid #10B98130" }}>
                     <CheckCircle size={11} color="#10B981" />
-                    <span style={{ color: "#10B981", fontSize: "0.65rem", fontWeight: 600, fontFamily: "var(--font-syne, sans-serif)", letterSpacing: "0.06em" }}>VERIFIED</span>
+                    <span style={{ color: "#075c3e", fontSize: "0.65rem", fontWeight: 900, fontFamily: "var(--font-syne, sans-serif)", letterSpacing: "0.06em" }}>VERIFIED</span>
                   </div>
                 </div>
-                <p style={{ color: "#94A3B8", fontSize: "0.9rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>
+                <p style={{ color: "#121213", fontSize: "0.9rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>
                   {profile.role_family} · {profile.location}
                 </p>
-                <p style={{ color: "#4A5C74", fontSize: "0.78rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 4 }}>
+                <p style={{ color: "#212224", fontSize: "0.78rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 4 }}>
                   Passport since {new Date(profile.created_at).toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
                   · Last updated {new Date(signal.updated_at).toLocaleDateString("en-GB", { month: "short", day: "numeric", year: "numeric" })}
                 </p>
@@ -98,7 +89,7 @@ export default function PassportPage() {
             <div className="grid grid-cols-12 gap-8">
               {/* Radar */}
               <div className="col-span-4">
-                <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", fontSize: "0.85rem", marginBottom: 16 }}>
+                <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: "bold", color: "#091F5C", fontSize: "0.85rem", marginBottom: 16 }}>
                   Signal Profile
                 </p>
                 <ResponsiveContainer width="100%" height={180}>
@@ -111,7 +102,7 @@ export default function PassportPage() {
               </div>
               {/* Dimension bars */}
               <div className="col-span-8 space-y-5">
-                <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", fontSize: "0.85rem", marginBottom: 16 }}>
+                <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: "bold", color: "#091F5C", fontSize: "0.85rem", marginBottom: 16 }}>
                   Evidence Dimensions
                 </p>
                 {dimensions.map((dim) => {
@@ -124,11 +115,11 @@ export default function PassportPage() {
                             <Icon size={13} color={dim.color} strokeWidth={1.5} />
                           </div>
                           <div>
-                            <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "white", fontSize: "0.82rem" }}>{dim.label}</p>
+                            <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: "bold", color: "#091F5C", fontSize: "0.82rem" }}>{dim.label}</p>
                             <p style={{ color: "#4A5C74", fontSize: "0.7rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>{dim.desc}</p>
                           </div>
                         </div>
-                        <span style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, fontSize: "0.9rem", color: dim.score > 0 ? "white" : "#4A5C74" }}>
+                        <span style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: "bold", fontSize: "0.9rem", color: dim.score > 0 ? "#091F5C" : "#4A5C74" }}>
                           {dim.score > 0 ? `${dim.score}/100` : "—"}
                         </span>
                       </div>
@@ -142,7 +133,7 @@ export default function PassportPage() {
         </div>
 
         {/* Evidence log */}
-        <div className="card-base p-6 animate-fade-up" style={{ animationDelay: "200ms" }}>
+        <div className="card-base p-6 animate-fade-up" style={{ animationDelay: "200ms", background: "#d8e7f8" }}>
           <SectionHeader title="Evidence Log" subtitle="Every score backed by real work" />
           <div className="space-y-4">
             {mockMissionAttempts.map((attempt) => (
@@ -150,7 +141,7 @@ export default function PassportPage() {
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", fontSize: "0.9rem" }}>
+                      <h3 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: "bold", color: "#091F5C", fontSize: "0.9rem" }}>
                         {attempt.mission?.title}
                       </h3>
                       <ModuleBadge type={attempt.mission?.module_type ?? "skill_proof"} />
@@ -161,7 +152,7 @@ export default function PassportPage() {
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.5rem", color: "white", letterSpacing: "-0.03em" }}>
+                    <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: "bold", fontSize: "1.5rem", color: "#091F5C", letterSpacing: "-0.03em" }}>
                       {attempt.total_score}
                       <span style={{ color: "#4A5C74", fontSize: "0.8rem", fontWeight: 400 }}>/100</span>
                     </p>
@@ -170,17 +161,17 @@ export default function PassportPage() {
                 {/* Dimension scores */}
                 <div className="grid grid-cols-4 gap-3">
                   {attempt.dimension_scores?.map((ds) => (
-                    <div key={ds.dimension} className="p-3 rounded-lg" style={{ background: "#080D1A", border: "1px solid #1E2D45" }}>
+                    <div key={ds.dimension} className="p-3 rounded-lg" style={{ background: "#dee4f3", border: "1px solid #1E2D45" }}>
                       <div className="flex items-center justify-between mb-1">
-                        <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.68rem", color: "#94A3B8" }}>
+                        <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.68rem", color: "#060606" }}>
                           {ds.dimension}
                         </p>
-                        <span style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, fontSize: "0.82rem", color: "white" }}>
+                        <span style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: "bold", fontSize: "0.82rem", color: "#042577" }}>
                           {ds.score}/{ds.max_score}
                         </span>
                       </div>
                       <ProgressBar value={ds.score} max={ds.max_score} height={3} showLabel={false} />
-                      <p style={{ color: "#4A5C74", fontSize: "0.68rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 6, lineHeight: 1.4 }}>
+                      <p style={{ color: "#0c0c0c", fontWeight: "bold", fontSize: "0.68rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 6, lineHeight: 1.4 }}>
                         {ds.evidence.slice(0, 60)}...
                       </p>
                     </div>
@@ -190,7 +181,7 @@ export default function PassportPage() {
                 <div className="mt-3 p-3 rounded-lg" style={{ background: "#10B98108", border: "1px solid #10B98120" }}>
                   <div className="flex items-start gap-2">
                     <CheckCircle size={13} color="#10B981" className="mt-0.5 shrink-0" />
-                    <p style={{ color: "#94A3B8", fontSize: "0.78rem", fontFamily: "var(--font-dm-sans, sans-serif)", lineHeight: 1.5 }}>
+                    <p style={{ color: "#3d3f40", fontSize: "0.78rem", fontFamily: "var(--font-dm-sans, sans-serif)", lineHeight: 1.5 }}>
                       <span style={{ color: "#10B981", fontWeight: 600 }}>AI Assessment: </span>
                       {attempt.overall_summary}
                     </p>

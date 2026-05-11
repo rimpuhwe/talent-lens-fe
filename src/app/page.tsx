@@ -1,14 +1,25 @@
-// src/app/page.tsx
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
 import { 
   MapPin, Mail, Clock, Phone, 
   Users, Briefcase, Focus, ThumbsUp,
-  Target, BrainCircuit, TrendingUp, CheckCircle2, ArrowRight
+  Target, BrainCircuit, TrendingUp, CheckCircle2
 } from "lucide-react";
 
 export default function HomePage() {
+  const [isAnnual, setIsAnnual] = useState(true);
+
+  // Custom sleek checkmark to match the image perfectly
+  const CheckIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  );
+
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-body overflow-x-hidden">
+    <div className="min-h-screen bg-white text-slate-900 font-body overflow-x-hidden scroll-smooth">
       
       {/* 1. TOP UTILITY BAR */}
       <div className="bg-[#0F62FE] text-white py-2.5 px-6 lg:px-12 flex flex-col sm:flex-row items-center justify-between text-xs font-semibold tracking-wide">
@@ -40,7 +51,7 @@ export default function HomePage() {
             <Link href="/" className="text-slate-900">HOME</Link>
             <Link href="#about" className="hover:text-[#0F62FE] transition-colors">JOB OPPORTUNITIES</Link>
             <Link href="#services" className="hover:text-[#0F62FE] transition-colors">FOR RECRUITERS</Link>
-            <Link href="#features" className="hover:text-[#0F62FE] transition-colors">PRICING</Link>
+            <Link href="#pricing" className="hover:text-[#0F62FE] transition-colors">PRICING</Link>
           </div>
 
           {/* CTA Area */}
@@ -200,6 +211,175 @@ export default function HomePage() {
               <p className="text-[15px] text-slate-500 leading-relaxed font-medium">
                 Candidates are never left with just a rejection. The platform provides targeted skill-gap feedback and recommends specific micro-learning resources to create a virtuous cycle of growth.
               </p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* 7. PRICING SECTION */}
+      <section id="pricing" className="py-16 md:py-24 px-4 sm:px-6 lg:px-12 bg-white flex justify-center">
+        {/* Large Rounded Container matching the image background */}
+        <div className="w-full max-w-7xl bg-[#F8F9FA] rounded-[3rem] py-20 px-4 md:px-10 lg:px-16">
+          
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
+              Pricing plans
+            </h2>
+            <p className="mt-4 text-sm md:text-base text-slate-600 font-medium">
+              Choose the right plan for your needs.
+            </p>
+          </div>
+
+          {/* Toggle Switch */}
+          <div className="flex justify-center items-center mb-16 space-x-4">
+            <span className={`text-sm font-bold ${!isAnnual ? 'text-slate-900' : 'text-slate-400'}`}>Monthly</span>
+            <button 
+              onClick={() => setIsAnnual(!isAnnual)}
+               className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none ${isAnnual ? 'bg-blue-900' : 'bg-slate-300'}`}            >
+              <span 
+                className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${isAnnual ? 'translate-x-9' : 'translate-x-1'}`}
+              />
+            </button>
+            <span className={`text-sm font-bold flex items-center ${isAnnual ? 'text-slate-900' : 'text-slate-400'}`}>
+              Annual <span className="ml-2 inline-flex items-center rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-bold text-slate-700">Save 20%</span>
+            </span>
+          </div>
+
+          {/* Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            
+            {/* Card 1: Pay As You Go */}
+            <div className="bg-white rounded-[2.5rem] p-2.5 shadow-2xl shadow-slate-200/50 flex flex-col h-full border border-slate-100/50">
+              {/* Inner Top Block */}
+              <div className="bg-[#F3F4F6] rounded-[2rem] p-6 pb-12 flex flex-col">
+                <div className="mb-6">
+                  <span className="bg-white text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-wider text-slate-800 shadow-sm">
+                    Pay As You Recruit
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-4xl lg:text-[40px] font-extrabold text-slate-900">$49</span>
+                  <span className="text-slate-600 font-medium text-sm">/signal</span>
+                </div>
+                <p className="text-slate-600 text-[13px] font-medium">Perfect For Single Hires</p>
+              </div>
+
+              {/* Overlapping Button */}
+              <div className="px-3 -mt-6 relative z-10">
+                <button className="w-full bg-blue-950 hover:bg-blue-900 text-white py-3.5 rounded-full font-semibold text-sm transition-all shadow-md">
+                  Start Hiring
+                </button>
+              </div>
+
+              {/* Features List */}
+              <div className="px-6 pt-10 pb-8 flex-1">
+                <ul className="space-y-3.5">
+                  <li className="flex items-center gap-3">
+                    <CheckIcon />
+                    <span className="text-[13px] font-medium text-slate-600">1 Active Job Signal</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckIcon />
+                    <span className="text-[13px] font-medium text-slate-600">10 Verified Shortlists</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckIcon />
+                    <span className="text-[13px] font-medium text-slate-600">Standard AI Recruiter</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Card 2: Professional (Gradient Block) */}
+            <div className="bg-white rounded-[2.5rem] p-2.5 shadow-2xl shadow-slate-200/50 flex flex-col h-full border border-slate-100/50">
+              {/* Inner Top Block */}
+              <div className="bg-gradient-to-br from-[#E8EEFF] to-[#D5E0FF] rounded-[2rem] p-6 pb-12 flex flex-col">
+                <div className="mb-6">
+                  <span className="bg-white text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-wider text-slate-800 shadow-sm">
+                    Professional
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-4xl lg:text-[40px] font-extrabold text-slate-900">${isAnnual ? '119' : '149'}</span>
+                  <span className="text-slate-600 font-medium text-sm">/month</span>
+                </div>
+                <p className="text-slate-600 text-[13px] font-medium">Perfect For Growing Teams</p>
+              </div>
+
+              {/* Overlapping Button */}
+              <div className="px-3 -mt-6 relative z-10">
+                <button className="w-full bg-blue-950 hover:bg-blue-900 text-white py-3.5 rounded-full font-semibold text-sm transition-all shadow-md">
+                  Start Hiring
+                </button>
+              </div>
+
+              {/* Features List */}
+              <div className="px-6 pt-10 pb-8 flex-1">
+                <ul className="space-y-3.5">
+                  <li className="flex items-center gap-3">
+                    <CheckIcon />
+                    <span className="text-[13px] font-medium text-slate-600">Unlimited Job Signals</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckIcon />
+                    <span className="text-[13px] font-medium text-slate-600">Advanced AI Applicant Screening</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckIcon />
+                    <span className="text-[13px] font-medium text-slate-600">Dedicated AI Recruiter</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckIcon />
+                    <span className="text-[13px] font-medium text-slate-600">Risk-Free Guarantee</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Card 3: Enterprise */}
+            <div className="bg-white rounded-[2.5rem] p-2.5 shadow-2xl shadow-slate-200/50 flex flex-col h-full border border-slate-100/50 lg:col-span-1 md:col-span-2 lg:mx-0 md:mx-auto md:w-1/2 lg:w-full">
+              {/* Inner Top Block */}
+              <div className="bg-[#F3F4F6] rounded-[2rem] p-6 pb-12 flex flex-col">
+                <div className="mb-6">
+                  <span className="bg-white text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-wider text-slate-800 shadow-sm">
+                    Enterprise
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-4xl lg:text-[40px] font-extrabold text-slate-900">Custom</span>
+                </div>
+                <p className="text-slate-600 text-[13px] font-medium mt-1">For Large Organizations & API</p>
+              </div>
+
+              {/* Overlapping Button */}
+              <div className="px-3 -mt-6 relative z-10">
+                <button className="w-full bg-blue-950 hover:bg-blue-900 text-white py-3.5 rounded-full font-semibold text-sm transition-all shadow-md">
+                  Contact Us
+                </button>
+              </div>
+
+              {/* Features List */}
+              <div className="px-6 pt-10 pb-8 flex-1">
+                <ul className="space-y-3.5">
+                  <li className="flex items-center gap-3">
+                    <CheckIcon />
+                    <span className="text-[13px] font-medium text-slate-600">Full API Access</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckIcon />
+                    <span className="text-[13px] font-medium text-slate-600">Custom Skill Assessments</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckIcon />
+                    <span className="text-[13px] font-medium text-slate-600">Custom AI Evaluation Models</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckIcon />
+                    <span className="text-[13px] font-medium text-slate-600">White-labeled Interfaces</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
           </div>

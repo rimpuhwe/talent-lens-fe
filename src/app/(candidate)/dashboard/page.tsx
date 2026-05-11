@@ -1,11 +1,24 @@
 "use client";
 
-import { Target, BookOpen, User, ArrowRight, Clock, Star, Flame, CheckCircle } from "lucide-react";
+import { 
+  Target, BookOpen, User, ArrowRight, Clock, Star, Flame, 
+  CheckCircle, TrendingUp, Sparkles, ShieldCheck, Zap, ArrowUpRight 
+} from "lucide-react";
 import Link from "next/link";
-import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
+import { 
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip 
+} from "recharts";
 import Sidebar from "@/components/layout/Sidebar";
 import { StatCard, ScoreRing, ModuleBadge, ProgressBar, SectionHeader } from "@/components/shared";
 import { mockCandidateProfile, mockTalentSignal, mockMissions, mockMissionAttempts } from "@/lib/mock-data";
+
+// F5: Mock Growth Data showing TSS improvement over time
+const growthData = [
+  { month: "Mar", tss: 58 },
+  { month: "Apr", tss: 66 },
+  { month: "May", tss: 74 },
+];
 
 const radarData = [
   { subject: "Skill Proof", A: 74 },
@@ -14,169 +27,173 @@ const radarData = [
   { subject: "Communication", A: 71 },
 ];
 
-const modules = [
-  { type: "skill_proof" as const, label: "Skill Proof", score: 74, icon: Target, color: "#10B981", status: "completed" },
-  { type: "scenario_judgment" as const, label: "Scenario Judgment", score: 68, icon: BookOpen, color: "#F59E0B", status: "completed" },
-  { type: "learning_agility" as const, label: "Learning Agility", score: 82, icon: Flame, color: "#3B82F6", status: "completed" },
-  { type: "communication_proof" as const, label: "Communication", score: 0, icon: User, color: "#A855F7", status: "pending" },
-];
-
 export default function CandidateDashboard() {
-  const signal = mockTalentSignal;
   const profile = mockCandidateProfile;
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#080D1A" }}>
+    <div className="flex min-h-screen" style={{ background: "#F0F3FA" }}>
       <Sidebar role="candidate" userName={profile.full_name} userLocation={profile.location} />
 
-      <main className="flex-1 ml-64 p-8 bg-grid">
-        {/* Header */}
+      <main className="flex-1 ml-0 lg:ml-64 p-4 sm:p-6 md:p-8 bg-grid relative overflow-x-hidden w-full">
+        
+        {/* Header Section */}
         <div className="mb-8 animate-fade-up">
-          <p style={{ color: "#10B981", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            Welcome back
+          <p className="flex items-center gap-1.5" style={{ color: "#628ECB", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            <ShieldCheck size={14} className="text-[#10B981]" /> Evidence-First Intelligence Passport
           </p>
-          <h1 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.75rem", color: "white", letterSpacing: "-0.02em", marginTop: 4 }}>
-            {profile.full_name}
+          <h1 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.75rem", color: "#395886", letterSpacing: "-0.02em", marginTop: 4 }}>
+            Evidence Dashboard, {profile.full_name.split(" ")[0]}
           </h1>
-          <p style={{ color: "#4A5C74", fontSize: "0.85rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 2 }}>
-            {profile.role_family} · {profile.location}
-          </p>
         </div>
 
-        {/* TSS Overview */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <StatCard label="Overall TSS" value={signal.overall_tss} delta="+8 pts this week" deltaType="up" icon={Star} delay={0} />
-          <StatCard label="Modules Done" value={`${signal.completed_modules.length}/4`} delta="1 remaining" deltaType="neutral" icon={CheckCircle} accent="#3B82F6" delay={100} />
-          <StatCard label="Skill Proof" value={signal.skill_proof_score} delta="Top 32%" deltaType="up" icon={Target} accent="#10B981" delay={200} />
-          <StatCard label="Learning Speed" value={signal.learning_agility_score} delta="Highest score" deltaType="up" icon={Flame} accent="#F59E0B" delay={300} />
-        </div>
-
-        {/* Main grid */}
-        <div className="grid grid-cols-12 gap-6 mb-8">
-
-          {/* Radar chart */}
-          <div className="col-span-4 card-base p-6 animate-fade-up" style={{ animationDelay: "200ms" }}>
-            <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", marginBottom: 4, fontSize: "0.95rem" }}>
-              Talent Signal Profile
-            </p>
-            <p style={{ color: "#4A5C74", fontSize: "0.78rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginBottom: 16 }}>
-              Your 4-dimension evidence map
-            </p>
-            <ResponsiveContainer width="100%" height={200}>
-              <RadarChart data={radarData}>
-                <PolarGrid stroke="#1E2D45" />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: "#4A5C74", fontSize: 10, fontFamily: "var(--font-syne, sans-serif)" }} />
-                <Radar name="TSS" dataKey="A" stroke="#10B981" fill="#10B981" fillOpacity={0.12} strokeWidth={2} />
-              </RadarChart>
-            </ResponsiveContainer>
-
-            <div className="flex justify-center mt-4">
-              <ScoreRing score={signal.overall_tss} size={72} label="Overall TSS" />
+        {/* F2 & F4: Key Intelligence Metrics - Fully Responsive Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          
+          {/* Overall TSS */}
+          <div className="bg-white p-5 rounded-2xl border border-[#D5DEEF] shadow-sm animate-fade-up" style={{ animationDelay: '0ms' }}>
+            <div className="flex justify-between items-start mb-2">
+              <p style={{ color: "#628ECB", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase" }}>Overall TSS</p>
+              <div className="p-2 rounded-lg bg-[#F0F3FA]"><Star size={16} className="text-[#395886]" /></div>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#395886", fontFamily: "var(--font-syne, sans-serif)" }}>74</h2>
+              <span className="text-[#10B981] text-xs font-bold flex items-center"><ArrowUpRight size={12}/> +8 pts</span>
             </div>
           </div>
 
-          {/* Module progress */}
-          <div className="col-span-8 card-base p-6 animate-fade-up" style={{ animationDelay: "250ms" }}>
-            <SectionHeader title="Evidence Modules" subtitle="Complete all 4 to maximise your TSS" action={
-              <Link href="/missions" className="btn-primary text-xs px-4 py-2 rounded-lg flex items-center gap-1.5">
-                Start Mission <ArrowRight size={12} />
-              </Link>
-            } />
-            <div className="space-y-5">
-              {modules.map((mod) => {
-                const Icon = mod.icon;
-                return (
-                  <div key={mod.type}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${mod.color}15`, border: `1px solid ${mod.color}30` }}>
-                          <Icon size={14} color={mod.color} strokeWidth={1.5} />
-                        </div>
-                        <div>
-                          <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "white", fontSize: "0.85rem" }}>{mod.label}</p>
-                          <ModuleBadge type={mod.type} />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {mod.status === "pending" ? (
-                          <span style={{ color: "#4A5C74", fontSize: "0.75rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>Not started</span>
-                        ) : (
-                          <span style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, fontSize: "0.9rem", color: mod.color }}>
-                            {mod.score}/100
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <ProgressBar value={mod.score} color={mod.color} height={5} />
-                  </div>
-                );
-              })}
+          {/* Evidence Strength (F2: Trust Indicator) */}
+          <div className="bg-white p-5 rounded-2xl border border-[#D5DEEF] shadow-sm animate-fade-up" style={{ animationDelay: '100ms' }}>
+            <div className="flex justify-between items-start mb-2">
+              <p style={{ color: "#628ECB", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase" }}>Evidence Strength</p>
+              <div className="p-2 rounded-lg bg-[#F0F3FA]"><ShieldCheck size={16} className="text-[#10B981]" /></div>
             </div>
+            <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#10B981", fontFamily: "var(--font-syne, sans-serif)" }}>High</h2>
+            <p style={{ color: "#628ECB", fontSize: "0.7rem", fontWeight: 600 }}>4 Modules Verified</p>
+          </div>
+
+          {/* Global Rank */}
+          <div className="bg-white p-5 rounded-2xl border border-[#D5DEEF] shadow-sm animate-fade-up" style={{ animationDelay: '200ms' }}>
+            <div className="flex justify-between items-start mb-2">
+              <p style={{ color: "#628ECB", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase" }}>Global Rank</p>
+              <div className="p-2 rounded-lg bg-[#F0F3FA]"><Target size={16} className="text-[#628ECB]" /></div>
+            </div>
+            <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#395886", fontFamily: "var(--font-syne, sans-serif)" }}>Top 12%</h2>
+            <p style={{ color: "#628ECB", fontSize: "0.7rem", fontWeight: 600 }}>In Skill Proof</p>
+          </div>
+
+          {/* Learning Speed (F4: Hidden Talent Insight) */}
+          <div className="bg-white p-5 rounded-2xl border border-[#D5DEEF] shadow-sm animate-fade-up" style={{ animationDelay: '300ms' }}>
+            <div className="flex justify-between items-start mb-2">
+              <p style={{ color: "#628ECB", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase" }}>Learning Speed</p>
+              <div className="p-2 rounded-lg bg-[#FFF9F2]"><Zap size={16} className="text-[#F59E0B]" /></div>
+            </div>
+            <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#F59E0B", fontFamily: "var(--font-syne, sans-serif)" }}>Elite</h2>
+            <p style={{ color: "#628ECB", fontSize: "0.7rem", fontWeight: 600 }}>Top 5% Agility</p>
           </div>
         </div>
 
-        {/* Recent attempts + available missions */}
-        <div className="grid grid-cols-12 gap-6">
+        {/* Main Intelligence Grid - F5 & F6 Visualization */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+          
+          {/* F6: Intelligence Profile (Radar) */}
+          <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-[#D5DEEF] shadow-sm animate-fade-up" style={{ animationDelay: '400ms' }}>
+            <SectionHeader title="Intelligence Profile" subtitle="Your 4-dimension evidence map" />
+            <div className="h-[280px] mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={radarData}>
+                  <PolarGrid stroke="#D5DEEF" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: "#395886", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-syne, sans-serif)" }} />
+                  <Radar name="Score" dataKey="A" stroke="#395886" fill="#8AAEED" fillOpacity={0.4} strokeWidth={3} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            {/* Meaningful Dimension Legend */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-6 border-t border-[#F0F3FA] pt-6">
+               <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: "#10B981" }}></div>
+                  <p className="text-[10px] font-bold text-[#628ECB] uppercase">Skill Proof</p>
+               </div>
+               <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: "#F59E0B" }}></div>
+                  <p className="text-[10px] font-bold text-[#628ECB] uppercase">Scenario Judgment</p>
+               </div>
+               <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: "#395886" }}></div>
+                  <p className="text-[10px] font-bold text-[#628ECB] uppercase">Learning Agility</p>
+               </div>
+               <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: "#A855F7" }}></div>
+                  <p className="text-[10px] font-bold text-[#628ECB] uppercase">Communication</p>
+               </div>
+            </div>
+          </div>
 
-          {/* Recent attempts */}
-          <div className="col-span-7 card-base p-6 animate-fade-up" style={{ animationDelay: "300ms" }}>
-            <SectionHeader title="Recent Attempts" subtitle="Your last scored missions" />
-            <div className="space-y-3">
-              {mockMissionAttempts.map((attempt) => (
-                <div key={attempt.id} className="flex items-center gap-4 p-4 rounded-xl transition-colors hover:bg-white/5 cursor-pointer"
-                  style={{ border: "1px solid #1E2D45" }}>
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: "#10B98115", border: "1px solid #10B98130" }}>
-                    <Target size={16} color="#10B981" strokeWidth={1.5} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "white", fontSize: "0.85rem" }}>
-                      {attempt.mission?.title}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <ModuleBadge type={attempt.mission?.module_type ?? "skill_proof"} />
-                      <span style={{ color: "#4A5C74", fontSize: "0.72rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>
-                        Attempt #{attempt.attempt_number}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, fontSize: "1.1rem", color: "white" }}>
-                      {attempt.total_score}<span style={{ color: "#4A5C74", fontSize: "0.7rem" }}>/100</span>
-                    </p>
-                  </div>
+          {/* F5: Growth Timeline (Line Chart) */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="bg-white p-6 rounded-2xl border border-[#D5DEEF] shadow-sm animate-fade-up h-full" style={{ animationDelay: '500ms' }}>
+              <SectionHeader title="Growth Timeline" subtitle="Evidence Score improvement over time" />
+              <div className="h-[220px] mt-8">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={growthData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F0F3FA" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#628ECB', fontSize: 12, fontWeight: 600}} dy={10} />
+                    <YAxis hide domain={[0, 100]} />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(57,88,134,0.1)' }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="tss" 
+                      stroke="#395886" 
+                      strokeWidth={4} 
+                      dot={{ r: 6, fill: "#395886", strokeWidth: 2, stroke: "#fff" }} 
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              
+              {/* F11: Quick Action System */}
+              <div className="mt-8 p-5 rounded-2xl bg-[#F0F3FA] border border-[#B1C9EF] flex items-center justify-between">
+                <div>
+                  <p style={{ color: "#395886", fontWeight: 700, fontSize: "0.9rem" }}>Ready for your next leap?</p>
+                  <p style={{ color: "#628ECB", fontSize: "0.75rem" }}>Improve your Communication score to boost TSS.</p>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Available missions */}
-          <div className="col-span-5 card-base p-6 animate-fade-up" style={{ animationDelay: "350ms" }}>
-            <SectionHeader title="Available Missions" subtitle="Next steps to grow your TSS" />
-            <div className="space-y-3">
-              {mockMissions.map((mission) => (
-                <Link key={mission.id} href="/missions"
-                  className="block p-4 rounded-xl transition-all hover:border-emerald-500/30 group"
-                  style={{ border: "1px solid #1E2D45" }}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "white", fontSize: "0.82rem" }}>
-                        {mission.title}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <ModuleBadge type={mission.module_type} />
-                        <span className="flex items-center gap-1" style={{ color: "#4A5C74", fontSize: "0.7rem" }}>
-                          <Clock size={10} /> {mission.time_limit_min}m
-                        </span>
-                      </div>
-                    </div>
-                    <ArrowRight size={14} color="#4A5C74" className="group-hover:text-emerald-400 mt-0.5 transition-colors shrink-0" />
-                  </div>
+                <Link href="/missions" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#395886] text-white text-xs font-bold hover:opacity-90 transition-all">
+                  Next Mission <ArrowRight size={14} />
                 </Link>
-              ))}
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Verification Modules Section */}
+        <div className="bg-white p-6 rounded-2xl border border-[#D5DEEF] shadow-sm animate-fade-up mb-8">
+          <SectionHeader title="Evidence Modules" subtitle="Complete missions to verify your talent signal" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            {/* Logic kept from your modules but styled for the new palette */}
+            {[
+              { label: "Skill Proof", score: 74, color: "#10B981", icon: Target },
+              { label: "Scenario Judgment", score: 68, color: "#F59E0B", icon: BookOpen },
+              { label: "Learning Agility", score: 82, color: "#395886", icon: Flame },
+              { label: "Communication", score: 0, color: "#D5DEEF", icon: User },
+            ].map((mod) => (
+              <div key={mod.label} className="p-4 rounded-xl bg-[#F0F3FA]/50 border border-[#D5DEEF]">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white border border-[#D5DEEF]">
+                      <mod.icon size={16} color={mod.score > 0 ? mod.color : "#628ECB"} />
+                    </div>
+                    <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "#395886", fontSize: "0.85rem" }}>{mod.label}</p>
+                  </div>
+                  <p style={{ fontWeight: 800, color: "#395886", fontSize: "0.9rem" }}>{mod.score > 0 ? `${mod.score}%` : "Pending"}</p>
+                </div>
+                <ProgressBar value={mod.score} color={mod.color} height={6} />
+              </div>
+            ))}
+          </div>
+        </div>
+
       </main>
     </div>
   );

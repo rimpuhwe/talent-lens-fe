@@ -3,7 +3,10 @@ import { parseAxiosError } from "../errors";
 import { attachAuthInterceptor } from "../interceptors/auth.interceptor";
 import { attachErrorInterceptor } from "../interceptors/error.interceptor";
 
-export function createApiClient(baseURL: string): AxiosInstance {
+export function createApiClient(
+  baseURL: string,
+  options?: { browserBaseURL?: string }
+): AxiosInstance {
   const client = axios.create({
     baseURL,
     headers: {
@@ -11,6 +14,15 @@ export function createApiClient(baseURL: string): AxiosInstance {
     },
     timeout: 60_000,
   });
+
+  if (options?.browserBaseURL) {
+    client.interceptors.request.use((config) => {
+      if (typeof window !== "undefined") {
+        config.baseURL = options.browserBaseURL;
+      }
+      return config;
+    });
+  }
 
   // Response interceptors run in reverse registration order on errors.
   client.interceptors.response.use(

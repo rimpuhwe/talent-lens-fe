@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [recruiters, setRecruiters] = useState<RecruiterProfile[]>([]);
   const [candidates, setCandidates] = useState<CandidateProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   const loadDashboard = async () => {
@@ -50,8 +51,21 @@ export default function AdminDashboard() {
   }, [candidates, recruiters]);
 
   const updateRecruiter = async (id: number, status: "APPROVED" | "DENIED") => {
-    await adminService.updateRecruiterStatus(id, { status });
-    await loadDashboard();
+    setUpdatingId(id);
+    setError("");
+
+    try {
+      await adminService.updateRecruiterStatus(id, { status });
+      await loadDashboard();
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Unable to update recruiter status. Check your connection and try again.";
+      setError(message);
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   return (
@@ -128,10 +142,20 @@ export default function AdminDashboard() {
                       <Cell>{recruiter.companyPhone || "--"}</Cell>
                       <Cell>
                         <div className="flex gap-2">
-                          <button onClick={() => updateRecruiter(recruiter.id, "APPROVED")} className="rounded-lg bg-emerald-500/10 p-2 text-emerald-400 hover:bg-emerald-500 hover:text-white">
+                          <button
+                            type="button"
+                            disabled={updatingId === recruiter.id}
+                            onClick={() => void updateRecruiter(recruiter.id, "APPROVED")}
+                            className="rounded-lg bg-emerald-500/10 p-2 text-emerald-400 hover:bg-emerald-500 hover:text-white disabled:opacity-50"
+                          >
                             <CheckCircle2 size={16} />
                           </button>
-                          <button onClick={() => updateRecruiter(recruiter.id, "DENIED")} className="rounded-lg bg-red-500/10 p-2 text-red-400 hover:bg-red-500 hover:text-white">
+                          <button
+                            type="button"
+                            disabled={updatingId === recruiter.id}
+                            onClick={() => void updateRecruiter(recruiter.id, "DENIED")}
+                            className="rounded-lg bg-red-500/10 p-2 text-red-400 hover:bg-red-500 hover:text-white disabled:opacity-50"
+                          >
                             <XCircle size={16} />
                           </button>
                         </div>

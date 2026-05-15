@@ -2,8 +2,6 @@
 
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
-
 interface StatCardProps {
   label: string;
   value: string | number;
@@ -45,8 +43,6 @@ export function StatCard({ label, value, delta, deltaType = "neutral", icon: Ico
   );
 }
 
-// ─── Score Ring ───────────────────────────────────────────────────────────────
-
 interface ScoreRingProps {
   score: number;
   size?: number;
@@ -84,7 +80,6 @@ export function ScoreRing({ score, size = 80, strokeWidth = 6, label, color = "#
   );
 }
 
-// ─── Recommendation Badge ─────────────────────────────────────────────────────
 
 interface RecommendationBadgeProps {
   recommendation: "strong" | "borderline" | "not_yet";
@@ -110,7 +105,7 @@ export function RecommendationBadge({ recommendation }: RecommendationBadgeProps
   );
 }
 
-// ─── Module Badge ─────────────────────────────────────────────────────────────
+
 
 type ModuleType = "skill_proof" | "scenario_judgment" | "learning_agility" | "communication_proof";
 
@@ -138,7 +133,7 @@ export function ModuleBadge({ type }: ModuleBadgeProps) {
   );
 }
 
-// ─── Progress Bar ─────────────────────────────────────────────────────────────
+
 
 interface ProgressBarProps {
   value: number;
@@ -164,7 +159,6 @@ export function ProgressBar({ value, max = 100, color = "#10B981", showLabel = t
   );
 }
 
-// ─── Dimension Match Icon ─────────────────────────────────────────────────────
 
 interface MatchLevelDotProps {
   level: "strong" | "partial" | "gap";

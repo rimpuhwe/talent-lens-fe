@@ -8,12 +8,15 @@ import { useRouter } from "next/navigation";
 import { getSession, signIn } from "next-auth/react";
 import { useToast } from "@/components/shared/toast-context";
 import { motion } from "framer-motion";
-import { getRoleHome } from "@/lib/auth-routes";
-import { profileService } from "@/services/profile.service";
+import { getPostAuthRedirect } from "@/lib/api/onboarding";
+import { profileApi } from "@/lib/api/services/profile.service";
+import { setAuthStorage } from "@/lib/api/auth/token";
+import { useOnboardingStore } from "@/stores/onboarding.store";
 
 export default function LoginPage() {
   const router = useRouter();
   const { success, error: toastError } = useToast();
+  const setOnboardingStatus = useOnboardingStore((s) => s.setStatus);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -41,21 +44,15 @@ export default function LoginPage() {
         throw new Error("Login succeeded, but the session is missing access details.");
       }
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      
+      setAuthStorage({ accessToken: token, role });
+
       success("Welcome back!", "Logged in successfully");
 
       if (role === "CANDIDATE") {
         try {
-          const status = await profileService.getProfileStatus();
-          const profileCompleted =
-            status?.profileCompleted ??
-            status?.completed ??
-            status?.isCompleted ??
-            status?.completionPercentage === 100;
-
-          router.push(profileCompleted ? "/dashboard" : "/onboarding");
+          const status = await profileApi.getStatus();
+          setOnboardingStatus(status);
+          router.push(getPostAuthRedirect(role, status));
           return;
         } catch {
           router.push("/onboarding");
@@ -63,7 +60,7 @@ export default function LoginPage() {
         }
       }
 
-      router.push(getRoleHome(role));
+      router.push(getPostAuthRedirect(role));
     } catch (error: any) {
       console.error("Login failed:", error);
       toastError("Authentication Failed", error.message || "Invalid email or password. Please try again.");

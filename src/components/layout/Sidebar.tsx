@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   User,
@@ -18,14 +18,17 @@ import {
   Bell,
   Sparkles,
   Shield,
+  type LucideIcon,
 } from "lucide-react";
 
+import { useAuthStore } from "@/stores/auth.store";
+import { useOnboardingStore } from "@/stores/onboarding.store";
 import type { UserRole } from "@/types";
 
 interface NavItem {
   label: string;
   href: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
 }
 
 const candidateNav: NavItem[] = [
@@ -100,7 +103,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
 
 const roleColors: Record<UserRole, string> = {
   candidate: "#10B981",
-  recruiter: "#395886",
+  recruiter: "#3B82F6",
   admin: "#F59E0B",
 };
 
@@ -122,12 +125,20 @@ export default function Sidebar({
   userLocation,
 }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const clearSession = useAuthStore((s) => s.clearSession);
+  const resetOnboarding = useOnboardingStore((s) => s.reset);
 
   const navItems = navByRole[role];
 
-  const accentColor = roleColors[role];
+  const handleLogout = async () => {
+    clearSession();
+    resetOnboarding();
+    await signOut({ redirect: false });
+    router.push("/login");
+  };
 
-  const [isOpen, setIsOpen] = useState(false);
+  const accentColor = roleColors[role];
 
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-screen w-72 overflow-hidden border-r border-white/5 bg-[#050A15] lg:flex lg:flex-col">
@@ -276,7 +287,7 @@ export default function Sidebar({
                     }}
                   >
                     <Icon
-                      size="18"
+                      size={18}
                       strokeWidth={isActive ? 2.4 : 1.8}
                       style={{
                         color: isActive
@@ -368,13 +379,18 @@ export default function Sidebar({
                 </p>
               </div>
 
-              <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.03] text-slate-500 transition-all duration-300 hover:bg-red-500/10 hover:text-red-400">
+              <button
+                type="button"
+                onClick={() => void handleLogout()}
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.03] text-slate-500 transition-all duration-300 hover:bg-red-500/10 hover:text-red-400"
+                aria-label="Log out"
+              >
                 <LogOut size={16} />
               </button>
             </div>
           </div>
         </div>
-      </aside>
-    </>
+      </div>
+    </aside>
   );
 }

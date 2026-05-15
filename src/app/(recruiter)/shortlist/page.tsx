@@ -1,19 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ChevronDown, ChevronUp, Send, Eye, Filter,
   Target, BookOpen, Flame, User, CheckCircle,
-  AlertCircle, X, ArrowLeft, Zap, MessageSquare, BarChart2, ShieldCheck, TrendingUp
+  AlertCircle, X, ArrowLeft, Zap, MessageSquare, BarChart2, ShieldCheck, TrendingUp,
+  type LucideIcon,
 } from "lucide-react";
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
 import Sidebar from "@/components/layout/Sidebar";
 import { SectionHeader, RecommendationBadge, ScoreRing, ProgressBar, MatchLevelDot } from "@/components/shared";
-import { mockRecruiterProfile, mockShortlist, mockJobSignals } from "@/lib/mock-data";
+import { useAdminCandidates } from "@/lib/api/hooks/use-admin";
+import { useJobs } from "@/lib/api/hooks/use-jobs";
+import { useMatchCandidateToJob } from "@/lib/api/hooks/use-ai";
+import {
+  buildMatchPayload,
+  mapCandidateMatchToShortlistEntry,
+} from "@/lib/api/mappers/shortlist";
 import type { ShortlistEntry } from "@/types";
 
-const dimensionIcons: Record<string, React.ElementType> = {
+const dimensionIcons: Record<string, LucideIcon> = {
   "Skill Proof": Target, "Work Behavior": BookOpen,
   "Learning Agility": Flame, "Communication": User,
 };
@@ -39,20 +46,82 @@ export default function ShortlistPage() {
   const [gapTestModal, setGapTestModal] = useState<ShortlistEntry | null>(null);
   const [sentTests, setSentTests] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<"all" | "strong" | "borderline" | "not_yet">("all");
+  const [shortlist, setShortlist] = useState<ShortlistEntry[]>([]);
+  const [matching, setMatching] = useState(false);
+  const [matchError, setMatchError] = useState("");
 
-  const filtered = mockShortlist.filter(e => filter === "all" || e.recommendation === filter);
+  const { data: jobs = [] } = useJobs();
+  const { data: candidates = [], isLoading: loadingCandidates, error: candidatesError } =
+    useAdminCandidates();
+  const matchMutation = useMatchCandidateToJob();
+
+  const activeSignal = jobs[0];
+
+  useEffect(() => {
+    if (!activeSignal?.id || !candidates.length) {
+      setShortlist([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const runMatching = async () => {
+      setMatching(true);
+      setMatchError("");
+
+      try {
+        const entries = await Promise.all(
+          candidates.slice(0, 12).map(async (candidate) => {
+            if (!candidate.id || !candidate.roleTssScores?.length) return null;
+            const match = await matchMutation.mutateAsync(
+              buildMatchPayload(candidate, activeSignal)
+            );
+            return mapCandidateMatchToShortlistEntry(candidate, match, activeSignal);
+          })
+        );
+
+        if (!cancelled) {
+          setShortlist(
+            entries
+              .filter((entry): entry is ShortlistEntry => Boolean(entry))
+              .sort((a, b) => b.overall_match - a.overall_match)
+          );
+        }
+      } catch (error: unknown) {
+        if (!cancelled) {
+          setMatchError(
+            error instanceof Error ? error.message : "Unable to generate AI shortlist."
+          );
+          setShortlist([]);
+        }
+      } finally {
+        if (!cancelled) setMatching(false);
+      }
+    };
+
+    void runMatching();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSignal?.id, candidates.length]);
+
+  const filtered = useMemo(
+    () => shortlist.filter((entry) => filter === "all" || entry.recommendation === filter),
+    [shortlist, filter]
+  );
 
   const handleSendGapTest = (entryId: string) => {
-    setSentTests(prev => new Set([...prev, entryId]));
+    setSentTests((prev) => new Set([...prev, entryId]));
     setGapTestModal(null);
   };
 
-  const activeSignal = mockJobSignals[0];
+  const recruiterName = activeSignal?.recruiter?.companyName ?? "Recruiter";
 
   return (
     <div className="flex min-h-screen" style={{ background: "#F0F3FA" }}>
       {/* Assuming Sidebar handles its own mobile hidden state (e.g. hidden lg:flex) */}
-      <Sidebar role="recruiter" userName={mockRecruiterProfile.full_name} userLocation={mockRecruiterProfile.location} />
+      <Sidebar role="recruiter" userName={recruiterName} userLocation={activeSignal?.workType ?? "Recruiter"} />
 
       {/* Main content area adjusts margin on mobile */}
       <main className="flex-1 ml-0 lg:ml-64 p-4 sm:p-6 md:p-8 bg-grid relative overflow-x-hidden w-full">
@@ -67,20 +136,32 @@ export default function ShortlistPage() {
             <ShieldCheck size={14} /> AI-Matched Shortlist
           </p>
           <h1 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.5rem", color: "#395886", letterSpacing: "-0.02em", marginTop: 4 }} className="md:text-[1.75rem]">
-            {activeSignal.title}
+            {activeSignal?.jobPosition ?? "Select a job signal"}
           </h1>
           <p style={{ color: "#628ECB", fontSize: "0.85rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 2 }}>
-            {activeSignal.role_family} · Matched by Gemini · {mockShortlist.length} candidates surfaced
+            {activeSignal?.workType ?? "Role"} · Matched by AI · {shortlist.length} candidates surfaced
+            {matching ? " · matching..." : ""}
           </p>
+          {(matchError || candidatesError) && (
+            <p className="mt-3 text-sm text-amber-700">
+              {matchError ||
+                (candidatesError instanceof Error
+                  ? candidatesError.message
+                  : "Unable to load candidate pool for matching.")}
+            </p>
+          )}
+          {!activeSignal && !loadingCandidates && (
+            <p className="mt-3 text-sm text-[#628ECB]">Publish a job signal to generate a shortlist.</p>
+          )}
         </div>
 
         {/* Stats bar - Responsive Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 md:mb-8">
           {[
-            { label: "Total Matched", value: mockShortlist.length, color: "#628ECB" },
-            { label: "Strong Match", value: mockShortlist.filter(e => e.recommendation === "strong").length, color: "#10B981" },
-            { label: "Borderline", value: mockShortlist.filter(e => e.recommendation === "borderline").length, color: "#F59E0B" },
-            { label: "Gap Tests Sent", value: sentTests.size + mockShortlist.filter(e => e.gap_test_sent).length, color: "#395886" },
+            { label: "Total Matched", value: shortlist.length, color: "#628ECB" },
+            { label: "Strong Match", value: shortlist.filter((e) => e.recommendation === "strong").length, color: "#10B981" },
+            { label: "Borderline", value: shortlist.filter((e) => e.recommendation === "borderline").length, color: "#F59E0B" },
+            { label: "Gap Tests Sent", value: sentTests.size + shortlist.filter((e) => e.gap_test_sent).length, color: "#395886" },
           ].map((s, i) => (
             <div key={s.label} className="card-base p-4 bg-[#FFFFFF] border border-[#D5DEEF] shadow-sm rounded-2xl animate-fade-up flex flex-col justify-center" style={{ animationDelay: `${i * 60}ms` }}>
               <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.5rem", color: s.color, letterSpacing: "-0.03em", lineHeight: 1 }} className="md:text-[1.8rem]">{s.value}</p>

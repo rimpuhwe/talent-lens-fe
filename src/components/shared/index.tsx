@@ -1,13 +1,13 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, type LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   label: string;
   value: string | number;
   delta?: string;
   deltaType?: "up" | "down" | "neutral";
-  icon?: React.ElementType;
+  icon?: LucideIcon;
   accent?: string;
   delay?: number;
 }
@@ -204,7 +204,7 @@ export function SectionHeader({ title, subtitle, action }: SectionHeaderProps) {
 // ─── Empty State ──────────────────────────────────────────────────────────────
 
 interface EmptyStateProps {
-  icon: React.ElementType;
+  icon: LucideIcon;
   title: string;
   description: string;
   action?: React.ReactNode;

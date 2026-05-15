@@ -17,6 +17,32 @@ type BackendLoginResponse = {
   lastName?: string;
 };
 
+interface LoginResult {
+  user: BackendLoginResponse;
+  accessToken: string;
+  role: ReturnType<typeof normalizeRole>;
+}
+
+interface AuthorizedUser {
+  id: string;
+  email: string;
+  name: string;
+  accessToken: string;
+  role: ReturnType<typeof normalizeRole>;
+}
+
+interface CustomJWT {
+  accessToken?: string;
+  role?: ReturnType<typeof normalizeRole>;
+}
+
+interface CustomSession {
+  accessToken?: string;
+  user: {
+    role?: ReturnType<typeof normalizeRole>;
+  };
+}
+
 async function parseBackendLoginResponse(response: Response) {
   const text = await response.text();
 

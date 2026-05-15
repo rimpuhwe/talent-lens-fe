@@ -1,387 +1,325 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import {
-  Plus, FileText, Users, Clock, ChevronRight, X,
-  Briefcase, Target, MessageSquare, CheckCircle, Zap
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Zap, Plus, Sparkles, BrainCircuit, 
+  Target, Clock, Users, ArrowRight,
+  FileText, Briefcase, Globe, Info, X
 } from "lucide-react";
-import Sidebar from "@/components/layout/Sidebar";
-import { SectionHeader, RecommendationBadge } from "@/components/shared";
-import { mockRecruiterProfile, mockJobSignals } from "@/lib/mock-data";
-import type { JobSignal } from "@/types";
+import { Button } from "@/components/ui/button";
+import { aiService, jobService } from "@/services/job.service";
+import { useToast } from "@/components/shared/toast-context";
+import type { JobSignal } from "@/types/api.types";
 
-const ROLE_FAMILIES = [
-  "Data & Analytics", "Software Engineering", "Product Management",
-  "UX/UI Design", "Digital Marketing", "Business Analysis",
-  "DevOps & Cloud", "Cybersecurity", "Project Management",
-];
-
-const SKILL_OPTIONS: Record<string, string[]> = {
-  "Data & Analytics": ["SQL", "Python", "Data Storytelling", "Excel", "Power BI", "Tableau", "Statistics", "Machine Learning"],
-  "Software Engineering": ["React", "TypeScript", "Node.js", "Python", "PostgreSQL", "Docker", "REST APIs", "Git"],
-  "Product Management": ["Product Strategy", "User Research", "Stakeholder Management", "Data Analysis", "Agile", "Roadmapping"],
-  "UX/UI Design": ["Figma", "User Research", "Prototyping", "Design Systems", "Usability Testing", "Wireframing"],
-  "Digital Marketing": ["SEO/SEM", "Social Media", "Content Strategy", "Analytics", "Email Marketing", "Paid Ads"],
-  "Business Analysis": ["Requirements Gathering", "Process Mapping", "Data Analysis", "Stakeholder Management", "SQL"],
-  "DevOps & Cloud": ["AWS", "Docker", "Kubernetes", "CI/CD", "Linux", "Terraform", "Monitoring"],
-  "Cybersecurity": ["Network Security", "Pen Testing", "Incident Response", "SIEM", "Risk Assessment"],
-  "Project Management": ["Agile/Scrum", "Risk Management", "Stakeholder Communication", "Budget Planning", "MS Project"],
-};
-
-const SCENARIO_TYPES = [
-  { value: "ethical_dilemma", label: "Ethical Dilemma" },
-  { value: "ambiguity_under_pressure", label: "Ambiguity Under Pressure" },
-  { value: "stakeholder_conflict", label: "Stakeholder Conflict" },
-  { value: "resource_constraints", label: "Resource Constraints" },
-  { value: "technical_tradeoff", label: "Technical Tradeoff" },
-  { value: "user_empathy", label: "User Empathy" },
-];
-
-export default function SignalsPage() {
-  const [showForm, setShowForm] = useState(false);
+export default function JobSignals() {
+  const { success, error: toastError, toast } = useToast();
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({
+  const [loading, setLoading] = useState(false);
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [jobs, setJobs] = useState<JobSignal[]>([]);
+  const [skillInput, setSkillInput] = useState("");
+  const [formData, setFormData] = useState({
     title: "",
-    role_family: "",
-    company_context: "",
-    required_skills: [] as string[],
-    skill_levels: {} as Record<string, string>,
-    scenario_types: [] as string[],
-    culture_notes: "",
-    timeline_days: 14,
+    description: "",
+    skills: [] as string[],
+    timeline: "30",
+    industry: "",
+    companyAbout: "",
+    experienceLevel: "",
+    workType: "Remote",
   });
-  const [submitted, setSubmitted] = useState(false);
 
-  const availableSkills = SKILL_OPTIONS[form.role_family] || [];
+  React.useEffect(() => {
+    const loadJobs = async () => {
+      try {
+        const data = await jobService.getJobs();
+        setJobs(Array.isArray(data) ? data : []);
+      } catch {
+        setJobs([]);
+      }
+    };
 
-  const toggleSkill = (skill: string) => {
-    setForm(prev => ({
-      ...prev,
-      required_skills: prev.required_skills.includes(skill)
-        ? prev.required_skills.filter(s => s !== skill)
-        : [...prev.required_skills, skill],
-    }));
+    void loadJobs();
+  }, []);
+
+  const addSkill = (skill = skillInput) => {
+    const nextSkill = skill.trim();
+    if (!nextSkill || formData.skills.includes(nextSkill)) return;
+    setFormData((current) => ({ ...current, skills: [...current.skills, nextSkill] }));
+    setSkillInput("");
   };
 
-  const toggleScenario = (val: string) => {
-    setForm(prev => ({
-      ...prev,
-      scenario_types: prev.scenario_types.includes(val)
-        ? prev.scenario_types.filter(s => s !== val)
-        : [...prev.scenario_types, val],
-    }));
+  const removeSkill = (skill: string) => {
+    setFormData((current) => ({ ...current, skills: current.skills.filter((item) => item !== skill) }));
   };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-    setTimeout(() => {
-      setShowForm(false);
-      setSubmitted(false);
+  const handleAiDraft = async () => {
+    setIsAiGenerating(true);
+    try {
+      const draft = await aiService.generateJobFull({
+        job_position: formData.title || "Open role",
+        industry_field: formData.industry || "Technology",
+        company_about: formData.companyAbout || "A growing TalentLens recruiter",
+        additional_instructions: formData.description || undefined,
+      });
+
+      setFormData({
+        ...formData,
+        description: draft.job_description || formData.description,
+        skills: Array.isArray(draft.required_skills) ? draft.required_skills : formData.skills,
+      });
+      success("AI Draft Generated", "The intelligence engine drafted a job description and skills.");
+    } catch (err) {
+      toastError("AI Draft Failed", "The intelligence layer is temporarily unavailable.");
+    } finally {
+      setIsAiGenerating(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    setLoading(true);
+
+    try {
+      await jobService.createJob({
+        jobPosition: formData.title,
+        jobDescription: formData.description,
+        requiredSkills: formData.skills.map((skillSetName) => ({ skillSetName })),
+        workType: formData.workType,
+        experienceLevel: formData.experienceLevel || undefined,
+      });
+
+      const data = await jobService.getJobs();
+      setJobs(Array.isArray(data) ? data : []);
+      success("Signal Published", "Your job signal is live and ready for matching.");
       setStep(1);
-      setForm({ title: "", role_family: "", company_context: "", required_skills: [], skill_levels: {}, scenario_types: [], culture_notes: "", timeline_days: 14 });
-    }, 2000);
+    } catch (error: any) {
+      toastError("Publish Failed", error?.response?.data?.message || "Could not publish this job signal.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#080D1A" }}>
-      <Sidebar role="recruiter" userName={mockRecruiterProfile.full_name} userLocation={mockRecruiterProfile.location} />
-
-      <main className="flex-1 ml-64 p-8 bg-grid">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-8 animate-fade-up">
+    <div className="min-h-screen bg-[#050A15] text-white p-8">
+      <div className="max-w-5xl mx-auto">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
-            <p style={{ color: "#3B82F6", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              System 2 · Recruiter Intelligence
-            </p>
-            <h1 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.75rem", color: "white", letterSpacing: "-0.02em", marginTop: 4 }}>
-              Job Signals
-            </h1>
-            <p style={{ color: "#4A5C74", fontSize: "0.85rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 2 }}>
-              Post structured capability profiles — not generic job descriptions.
-            </p>
+            <h1 className="text-4xl font-black tracking-tighter mb-2">Job Signals</h1>
+            <p className="text-muted-foreground">Define your hiring requirements and let our engine find verified talent.</p>
           </div>
-          <button onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm"
-            style={{ background: "#3B82F6", color: "white", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600 }}>
-            <Plus size={15} /> Post Job Signal
-          </button>
-        </div>
+          <Button 
+            onClick={() => setStep(2)}
+            className="bg-accent-emerald hover:bg-emerald-600 text-white rounded-2xl px-8 py-7 font-black text-lg shadow-glow transition-all active:scale-95"
+          >
+            <Plus className="mr-2" size={20} /> Post New Signal
+          </Button>
+        </header>
 
-        {/* Signals list */}
-        <div className="space-y-4">
-          {mockJobSignals.map((signal, i) => (
-            <div key={signal.id} className="card-base p-6 animate-fade-up" style={{ animationDelay: `${i * 80}ms` }}>
-              <div className="flex items-start justify-between gap-6">
-                <div className="flex-1 min-w-0">
-                  {/* Title row */}
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", fontSize: "1.05rem" }}>
-                      {signal.title}
-                    </h3>
-                    <span style={{
-                      background: signal.status === "active" ? "#10B98115" : signal.status === "draft" ? "#F59E0B15" : "#4A5C7415",
-                      color: signal.status === "active" ? "#10B981" : signal.status === "draft" ? "#F59E0B" : "#4A5C74",
-                      border: `1px solid ${signal.status === "active" ? "#10B98130" : signal.status === "draft" ? "#F59E0B30" : "#4A5C7430"}`,
-                      padding: "2px 9px", borderRadius: 4, fontSize: "0.62rem", fontWeight: 600,
-                      fontFamily: "var(--font-syne, sans-serif)", textTransform: "uppercase", letterSpacing: "0.07em"
-                    }}>
-                      {signal.status}
-                    </span>
-                  </div>
-
-                  {/* Meta */}
-                  <p style={{ color: "#4A5C74", fontSize: "0.8rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginBottom: 12 }}>
-                    {signal.role_family} &nbsp;·&nbsp;
-                    <Clock size={11} className="inline mr-1" style={{ verticalAlign: "middle" }} />
-                    {signal.timeline_days}-day timeline &nbsp;·&nbsp;
-                    <Users size={11} className="inline mr-1" style={{ verticalAlign: "middle" }} />
-                    {signal._count?.shortlist_entries} matched
-                  </p>
-
-                  {/* Company context */}
-                  {signal.company_context && (
-                    <p style={{ color: "#94A3B8", fontSize: "0.8rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginBottom: 12, fontStyle: "italic" }}>
-                      &ldquo;{signal.company_context}&rdquo;
-                    </p>
-                  )}
-
-                  {/* Skills */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {signal.required_skills.map(skill => (
-                      <span key={skill} style={{
-                        background: "#3B82F610", border: "1px solid #3B82F625",
-                        color: "#3B82F6", padding: "2px 8px", borderRadius: 4,
-                        fontSize: "0.65rem", fontWeight: 600, fontFamily: "var(--font-syne, sans-serif)"
-                      }}>{skill}</span>
-                    ))}
-                    {signal.scenario_types?.map(sc => (
-                      <span key={sc} style={{
-                        background: "#F59E0B10", border: "1px solid #F59E0B25",
-                        color: "#F59E0B", padding: "2px 8px", borderRadius: 4,
-                        fontSize: "0.65rem", fontWeight: 600, fontFamily: "var(--font-syne, sans-serif)"
-                      }}>{SCENARIO_TYPES.find(s => s.value === sc)?.label ?? sc}</span>
-                    ))}
-                  </div>
+        {/* Existing Signals List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
+          {jobs.map((signal, i) => (
+            <motion.div 
+              key={signal.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 hover:border-accent-emerald/30 transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                  signal.jobStatus !== "CLOSED" ? "bg-accent-emerald/10 text-accent-emerald" : "bg-white/10 text-muted-foreground"
+                }`}>
+                  {signal.jobStatus || "OPEN"}
                 </div>
-
-                {/* Actions */}
-                <div className="flex flex-col gap-2 shrink-0 items-end">
-                  <div className="text-right mb-1">
-                    <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.8rem", color: "white", letterSpacing: "-0.03em", lineHeight: 1 }}>
-                      {signal._count?.shortlist_entries}
-                    </p>
-                    <p style={{ color: "#4A5C74", fontSize: "0.68rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>candidates</p>
-                  </div>
-                  <Link href="/shortlist"
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs transition-all hover:bg-blue-500/10"
-                    style={{ border: "1px solid #253350", color: "#3B82F6", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600 }}>
-                    View Shortlist <ChevronRight size={12} />
-                  </Link>
-                  {signal.status === "active" && (
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs transition-colors hover:bg-white/5 w-full justify-center"
-                      style={{ border: "1px solid #1E2D45", color: "#4A5C74", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600 }}>
-                      <Zap size={11} /> Re-match AI
-                    </button>
-                  )}
+                <div className="text-muted-foreground group-hover:text-white transition-colors">
+                  <ArrowRight size={18} />
                 </div>
               </div>
-            </div>
+              <h3 className="text-xl font-bold mb-4">{signal.jobPosition}</h3>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Users size={16} />
+                  <span>{signal.skillsNeeded?.length ?? 0} Skills</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock size={16} />
+                  <span>{signal.workType || "Flexible"}</span>
+                </div>
+              </div>
+            </motion.div>
           ))}
         </div>
-      </main>
 
-      {/* ── Create Signal Modal ── */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6"
-          style={{ background: "rgba(8,13,26,0.85)", backdropFilter: "blur(8px)" }}>
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl animate-fade-up"
-            style={{ background: "#0D1427", border: "1px solid #253350", boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }}>
-
-            {/* Modal header */}
-            <div className="flex items-center justify-between px-8 py-6" style={{ borderBottom: "1px solid #1E2D45" }}>
-              <div>
-                <h2 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, color: "white", fontSize: "1.1rem" }}>
-                  Post a Job Signal
-                </h2>
-                <p style={{ color: "#4A5C74", fontSize: "0.78rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 2 }}>
-                  Step {step} of 3 — {["Role Context", "Skills & Scenarios", "Culture & Timeline"][step - 1]}
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                {/* Step indicators */}
-                <div className="flex items-center gap-1.5">
-                  {[1, 2, 3].map(s => (
-                    <div key={s} style={{
-                      width: s === step ? 20 : 6, height: 6, borderRadius: 3,
-                      background: s < step ? "#3B82F6" : s === step ? "#3B82F6" : "#1E2D45",
-                      transition: "all 0.3s ease",
-                    }} />
-                  ))}
-                </div>
-                <button onClick={() => { setShowForm(false); setStep(1); }} className="hover:text-white transition-colors" style={{ color: "#4A5C74" }}>
-                  <X size={20} />
+        {/* Create New Signal Modal/Overlay */}
+        <AnimatePresence>
+          {step === 2 && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[10000] bg-[#050A15]/95 backdrop-blur-xl flex items-center justify-center p-6 overflow-y-auto"
+            >
+              <motion.div 
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="w-full max-w-3xl bg-[#0A1120] border border-white/10 rounded-[3rem] p-10 shadow-2xl relative"
+              >
+                <button 
+                  onClick={() => setStep(1)}
+                  className="absolute top-8 right-8 text-muted-foreground hover:text-white transition-colors"
+                >
+                  <Plus className="rotate-45" size={32} />
                 </button>
-              </div>
-            </div>
 
-            {submitted ? (
-              <div className="p-12 text-center">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "#3B82F620", border: "1px solid #3B82F640" }}>
-                  <CheckCircle size={24} color="#3B82F6" />
+                <div className="flex items-center gap-3 text-accent-emerald mb-6">
+                  <Sparkles size={24} />
+                  <span className="text-xs font-black uppercase tracking-widest">New Intelligence Signal</span>
                 </div>
-                <h3 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", fontSize: "1.1rem", marginBottom: 8 }}>Signal Posted!</h3>
-                <p style={{ color: "#4A5C74", fontSize: "0.85rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>
-                  Gemini is matching talent passports now...
-                </p>
-              </div>
-            ) : (
-              <div className="p-8">
-                {/* Step 1: Role Context */}
-                {step === 1 && (
-                  <div className="space-y-5">
+
+                <h2 className="text-3xl font-black tracking-tight mb-10 leading-tight">
+                  Define your <br /> <span className="text-accent-emerald text-4xl">Perfect Candidate.</span>
+                </h2>
+
+                <div className="space-y-8">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">Job Title</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Lead Systems Architect"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none focus:border-accent-emerald transition-colors"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <label style={{ display: "block", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "#94A3B8", fontSize: "0.75rem", letterSpacing: "0.06em", marginBottom: 8 }}>
-                        JOB TITLE
-                      </label>
-                      <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-                        placeholder="e.g. Junior Data Analyst"
-                        style={{ width: "100%", background: "#080D1A", border: "1px solid #1E2D45", borderRadius: 10, padding: "10px 14px", color: "white", fontFamily: "var(--font-dm-sans, sans-serif)", fontSize: "0.9rem", outline: "none" }} />
+                      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">Industry</label>
+                      <input
+                        type="text"
+                        placeholder="Fintech, Healthcare, SaaS..."
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none focus:border-accent-emerald transition-colors"
+                        value={formData.industry}
+                        onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                      />
                     </div>
                     <div>
-                      <label style={{ display: "block", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "#94A3B8", fontSize: "0.75rem", letterSpacing: "0.06em", marginBottom: 8 }}>
-                        ROLE FAMILY
-                      </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {ROLE_FAMILIES.map(rf => (
-                          <button key={rf} onClick={() => setForm(p => ({ ...p, role_family: rf, required_skills: [] }))}
-                            style={{
-                              padding: "8px 10px", borderRadius: 8, fontSize: "0.75rem", textAlign: "center",
-                              border: `1px solid ${form.role_family === rf ? "#3B82F6" : "#1E2D45"}`,
-                              background: form.role_family === rf ? "#3B82F615" : "transparent",
-                              color: form.role_family === rf ? "#3B82F6" : "#94A3B8",
-                              fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
-                            }}>{rf}</button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label style={{ display: "block", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "#94A3B8", fontSize: "0.75rem", letterSpacing: "0.06em", marginBottom: 8 }}>
-                        COMPANY CONTEXT
-                      </label>
-                      <textarea value={form.company_context} onChange={e => setForm(p => ({ ...p, company_context: e.target.value }))}
-                        rows={3} placeholder="e.g. Early-stage fintech, 8-person team, fast-paced. Tell candidates what kind of environment this is."
-                        style={{ width: "100%", background: "#080D1A", border: "1px solid #1E2D45", borderRadius: 10, padding: "10px 14px", color: "white", fontFamily: "var(--font-dm-sans, sans-serif)", fontSize: "0.85rem", outline: "none", resize: "none" }} />
+                      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">Experience Level</label>
+                      <input
+                        type="text"
+                        placeholder="Mid, Senior, Principal"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none focus:border-accent-emerald transition-colors"
+                        value={formData.experienceLevel}
+                        onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
+                      />
                     </div>
                   </div>
-                )}
 
-                {/* Step 2: Skills & Scenarios */}
-                {step === 2 && (
-                  <div className="space-y-6">
-                    <div>
-                      <label style={{ display: "block", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "#94A3B8", fontSize: "0.75rem", letterSpacing: "0.06em", marginBottom: 8 }}>
-                        REQUIRED SKILLS <span style={{ color: "#4A5C74" }}>— select all that apply</span>
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {availableSkills.map(skill => (
-                          <button key={skill} onClick={() => toggleSkill(skill)}
-                            style={{
-                              padding: "6px 12px", borderRadius: 6, fontSize: "0.75rem",
-                              border: `1px solid ${form.required_skills.includes(skill) ? "#3B82F6" : "#1E2D45"}`,
-                              background: form.required_skills.includes(skill) ? "#3B82F615" : "transparent",
-                              color: form.required_skills.includes(skill) ? "#3B82F6" : "#94A3B8",
-                              fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
-                            }}>{skill}</button>
-                        ))}
-                        {!form.role_family && <p style={{ color: "#4A5C74", fontSize: "0.8rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>Select a role family first</p>}
-                      </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground">Description & Requirements</label>
+                      <button 
+                        onClick={handleAiDraft}
+                        disabled={isAiGenerating}
+                        className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-accent-emerald hover:text-emerald-400 transition-colors"
+                      >
+                        {isAiGenerating ? (
+                          <div className="w-3 h-3 border-2 border-accent-emerald/30 border-t-accent-emerald rounded-full animate-spin" />
+                        ) : (
+                          <BrainCircuit size={14} />
+                        )}
+                        Generate AI Draft
+                      </button>
                     </div>
-                    <div>
-                      <label style={{ display: "block", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "#94A3B8", fontSize: "0.75rem", letterSpacing: "0.06em", marginBottom: 8 }}>
-                        JUDGMENT SCENARIOS <span style={{ color: "#4A5C74" }}>— which matter for this role?</span>
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {SCENARIO_TYPES.map(sc => (
-                          <button key={sc.value} onClick={() => toggleScenario(sc.value)}
-                            style={{
-                              padding: "8px 12px", borderRadius: 8, fontSize: "0.75rem", textAlign: "left",
-                              border: `1px solid ${form.scenario_types.includes(sc.value) ? "#F59E0B" : "#1E2D45"}`,
-                              background: form.scenario_types.includes(sc.value) ? "#F59E0B10" : "transparent",
-                              color: form.scenario_types.includes(sc.value) ? "#F59E0B" : "#94A3B8",
-                              fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
-                            }}>{sc.label}</button>
-                        ))}
-                      </div>
-                    </div>
+                    <textarea 
+                      rows={6}
+                      placeholder="Describe the role, responsibilities, and key outcomes..."
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none focus:border-accent-emerald transition-colors resize-none"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
                   </div>
-                )}
 
-                {/* Step 3: Culture & Timeline */}
-                {step === 3 && (
-                  <div className="space-y-5">
+                  <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <label style={{ display: "block", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "#94A3B8", fontSize: "0.75rem", letterSpacing: "0.06em", marginBottom: 8 }}>
-                        CULTURE NOTES
-                      </label>
-                      <textarea value={form.culture_notes} onChange={e => setForm(p => ({ ...p, culture_notes: e.target.value }))}
-                        rows={3} placeholder="What kind of person thrives here? What communication style, values, or working preferences matter most?"
-                        style={{ width: "100%", background: "#080D1A", border: "1px solid #1E2D45", borderRadius: 10, padding: "10px 14px", color: "white", fontFamily: "var(--font-dm-sans, sans-serif)", fontSize: "0.85rem", outline: "none", resize: "none" }} />
+                      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">Target Hiring Timeline</label>
+                      <select 
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none focus:border-accent-emerald transition-colors appearance-none cursor-pointer"
+                        value={formData.timeline}
+                        onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
+                      >
+                        <option value="15">15 Days (Urgent)</option>
+                        <option value="30">30 Days (Standard)</option>
+                        <option value="60">60 Days (Strategic)</option>
+                      </select>
                     </div>
                     <div>
-                      <label style={{ display: "block", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "#94A3B8", fontSize: "0.75rem", letterSpacing: "0.06em", marginBottom: 8 }}>
-                        HIRING TIMELINE — {form.timeline_days} days
-                      </label>
-                      <input type="range" min={5} max={60} value={form.timeline_days}
-                        onChange={e => setForm(p => ({ ...p, timeline_days: parseInt(e.target.value) }))}
-                        style={{ width: "100%", accentColor: "#3B82F6" }} />
-                      <div className="flex justify-between mt-1">
-                        <span style={{ color: "#4A5C74", fontSize: "0.7rem" }}>5 days</span>
-                        <span style={{ color: "#4A5C74", fontSize: "0.7rem" }}>60 days</span>
-                      </div>
-                    </div>
-                    {/* Preview */}
-                    <div className="p-4 rounded-xl" style={{ background: "#080D1A", border: "1px solid #1E2D45" }}>
-                      <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", fontSize: "0.82rem", marginBottom: 10 }}>Signal Preview</p>
-                      <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "#3B82F6", fontSize: "1rem" }}>{form.title || "Untitled"}</p>
-                      <p style={{ color: "#4A5C74", fontSize: "0.75rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 4 }}>{form.role_family} · {form.timeline_days}d</p>
-                      <div className="flex flex-wrap gap-1.5 mt-3">
-                        {form.required_skills.map(s => (
-                          <span key={s} style={{ background: "#3B82F610", border: "1px solid #3B82F625", color: "#3B82F6", padding: "1px 7px", borderRadius: 3, fontSize: "0.62rem", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600 }}>{s}</span>
-                        ))}
+                      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">Work Type</label>
+                      <div className="flex items-center gap-3 h-[60px] px-6 bg-white/5 border border-white/10 rounded-2xl">
+                        <Globe size={18} className="text-accent-emerald" />
+                        <input
+                          value={formData.workType}
+                          onChange={(e) => setFormData({ ...formData, workType: e.target.value })}
+                          className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none"
+                        />
                       </div>
                     </div>
                   </div>
-                )}
 
-                {/* Footer nav */}
-                <div className="flex items-center justify-between mt-8 pt-6" style={{ borderTop: "1px solid #1E2D45" }}>
-                  <button onClick={() => step > 1 ? setStep(s => s - 1) : setShowForm(false)}
-                    style={{ color: "#4A5C74", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.85rem", background: "none", border: "none", cursor: "pointer" }}>
-                    {step === 1 ? "Cancel" : "← Back"}
-                  </button>
-                  {step < 3 ? (
-                    <button onClick={() => setStep(s => s + 1)}
-                      disabled={step === 1 && (!form.title || !form.role_family)}
-                      style={{
-                        background: "#3B82F6", color: "white", border: "none", borderRadius: 10,
-                        padding: "10px 24px", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600,
-                        fontSize: "0.85rem", cursor: "pointer", opacity: (step === 1 && (!form.title || !form.role_family)) ? 0.4 : 1,
-                      }}>
-                      Continue →
-                    </button>
-                  ) : (
-                    <button onClick={handleSubmit}
-                      style={{ background: "#3B82F6", color: "white", border: "none", borderRadius: 10, padding: "10px 24px", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer" }}>
-                      Post Signal & Match →
-                    </button>
-                  )}
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">Required Skills</label>
+                    <div className="flex gap-3">
+                      <input
+                        value={skillInput}
+                        onChange={(e) => setSkillInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addSkill();
+                          }
+                        }}
+                        placeholder="Add a skill"
+                        className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none focus:border-accent-emerald transition-colors"
+                      />
+                      <button type="button" onClick={() => addSkill()} className="rounded-2xl bg-white px-5 text-black">
+                        <Plus size={18} />
+                      </button>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {formData.skills.map((skill) => (
+                        <span key={skill} className="inline-flex items-center gap-2 rounded-xl border border-accent-emerald/20 bg-accent-emerald/10 px-3 py-2 text-xs font-bold text-accent-emerald">
+                          {skill}
+                          <button type="button" onClick={() => removeSkill(skill)}>
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6 pt-6">
+                    <Button 
+                      onClick={() => setStep(1)}
+                      className="flex-1 bg-white/5 border border-white/10 text-white hover:bg-white/10 py-8 rounded-2xl font-black"
+                    >
+                      Save Draft
+                    </Button>
+                    <Button 
+                      onClick={handlePublish}
+                      disabled={loading || !formData.title || !formData.description || formData.skills.length === 0}
+                      className="flex-[2] bg-accent-emerald hover:bg-emerald-600 text-white py-8 rounded-2xl font-black text-lg shadow-glow"
+                    >
+                      {loading ? "Publishing..." : "Publish Signal"}
+                      <ArrowRight className="ml-2" size={20} />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

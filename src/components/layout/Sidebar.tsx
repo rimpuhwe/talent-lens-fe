@@ -3,10 +3,22 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, User, Target, BookOpen, FileText,
-  Briefcase, Users, BarChart3, Settings, LogOut,
-  ChevronRight, Bell, Shield,
+  LayoutDashboard,
+  User,
+  Target,
+  BookOpen,
+  FileText,
+  Briefcase,
+  Users,
+  BarChart3,
+  Settings,
+  LogOut,
+  ChevronRight,
+  Bell,
+  Sparkles,
+  Shield,
 } from "lucide-react";
+
 import type { UserRole } from "@/types";
 
 interface NavItem {
@@ -16,23 +28,67 @@ interface NavItem {
 }
 
 const candidateNav: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "My Passport", href: "/passport", icon: User },
-  { label: "Missions", href: "/missions", icon: Target },
-  { label: "Gap Report", href: "/gap-report", icon: BookOpen },
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "My Passport",
+    href: "/passport",
+    icon: User,
+  },
+  {
+    label: "Missions",
+    href: "/missions",
+    icon: Target,
+  },
+  {
+    label: "Gap Report",
+    href: "/gap-report",
+    icon: BookOpen,
+  },
 ];
 
 const recruiterNav: NavItem[] = [
-  { label: "Dashboard", href: "/r-dashboard", icon: LayoutDashboard },
-  { label: "Job Signals", href: "/signals", icon: FileText },
-  { label: "Shortlists", href: "/shortlist", icon: Users },
+  {
+    label: "Dashboard",
+    href: "/r-dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Job Signals",
+    href: "/signals",
+    icon: FileText,
+  },
+  {
+    label: "Shortlists",
+    href: "/shortlist",
+    icon: Users,
+  },
 ];
 
 const adminNav: NavItem[] = [
-  { label: "Overview", href: "/admin-dashboard", icon: LayoutDashboard },
-  { label: "Candidates", href: "/admin-candidates", icon: Users },
-  { label: "Recruiters", href: "/admin-recruiters", icon: Briefcase },
-  { label: "Insights", href: "/admin-insights", icon: BarChart3 },
+  {
+    label: "Overview",
+    href: "/admin-dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Candidates",
+    href: "/admin-candidates",
+    icon: Users,
+  },
+  {
+    label: "Recruiters",
+    href: "/admin-recruiters",
+    icon: Briefcase,
+  },
+  {
+    label: "Insights",
+    href: "/admin-insights",
+    icon: BarChart3,
+  },
 ];
 
 const navByRole: Record<UserRole, NavItem[]> = {
@@ -48,9 +104,9 @@ const roleColors: Record<UserRole, string> = {
 };
 
 const roleLabels: Record<UserRole, string> = {
-  candidate: "Talent",
-  recruiter: "Recruiter",
-  admin: "Admin",
+  candidate: "Talent Portal",
+  recruiter: "Recruiter Portal",
+  admin: "Admin Portal",
 };
 
 interface SidebarProps {
@@ -59,91 +115,260 @@ interface SidebarProps {
   userLocation?: string;
 }
 
-export default function Sidebar({ role, userName, userLocation }: SidebarProps) {
+export default function Sidebar({
+  role,
+  userName,
+  userLocation,
+}: SidebarProps) {
   const pathname = usePathname();
+
   const navItems = navByRole[role];
+
   const accentColor = roleColors[role];
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 flex flex-col z-40"
-      style={{ background: "linear-gradient(180deg, #0A1120 0%, #080D1A 100%)", borderRight: "1px solid #1E2D45" }}>
+    <aside className="fixed left-0 top-0 z-50 hidden h-screen w-72 overflow-hidden border-r border-white/5 bg-[#050A15] lg:flex lg:flex-col">
+      {/* Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div
+          className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full blur-3xl"
+          style={{
+            background: `${accentColor}12`,
+          }}
+        />
 
-      {/* Logo */}
-      <div className="px-6 pt-8 pb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: `${accentColor}20`, border: `1px solid ${accentColor}40` }}>
-            <div className="w-3 h-3 rounded-sm" style={{ background: accentColor }} />
-          </div>
-          <div>
-            <p className="font-display font-700 text-sm tracking-wide text-white" style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700 }}>
-              TalentLens
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: accentColor, fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              {roleLabels[role]} Portal
-            </p>
-          </div>
-        </div>
+        <div className="absolute inset-0 " />
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 space-y-0.5">
-        <p className="px-3 mb-3 text-xs font-semibold uppercase tracking-widest" style={{ color: "#4A5C74", fontFamily: "var(--font-syne, sans-serif)" }}>
-          Navigation
-        </p>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link key={item.href} href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative"
+      {/* Content */}
+      <div className="relative flex h-full flex-col">
+        {/* Logo */}
+        <div className="px-6 pb-6 pt-7">
+          <div className="flex items-center gap-4">
+            <div
+              className="relative flex h-12 w-12 items-center justify-center rounded-2xl border"
               style={{
-                background: isActive ? `${accentColor}12` : "transparent",
-                color: isActive ? accentColor : "#94A3B8",
-                borderLeft: isActive ? `2px solid ${accentColor}` : "2px solid transparent",
-                fontFamily: "var(--font-dm-sans, sans-serif)",
-                fontWeight: isActive ? 500 : 400,
-              }}>
-              <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
-              <span>{item.label}</span>
-              {isActive && <ChevronRight size={12} className="ml-auto opacity-60" />}
-            </Link>
-          );
-        })}
-      </nav>
+                background: `${accentColor}15`,
+                borderColor: `${accentColor}30`,
+              }}
+            >
+              <div
+                className="absolute inset-0 rounded-2xl blur-xl"
+                style={{
+                  background: `${accentColor}15`,
+                }}
+              />
 
-      {/* Bottom section */}
-      <div className="px-3 pb-6 space-y-1 border-t" style={{ borderColor: "#1E2D45", paddingTop: "16px", marginTop: "8px" }}>
-        <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full transition-colors hover:bg-white/5"
-          style={{ color: "#94A3B8" }}>
-          <Bell size={16} strokeWidth={1.5} />
-          <span style={{ fontFamily: "var(--font-dm-sans, sans-serif)" }}>Notifications</span>
-          <span className="ml-auto text-xs px-1.5 py-0.5 rounded" style={{ background: `${accentColor}20`, color: accentColor }}>3</span>
-        </button>
-        <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full transition-colors hover:bg-white/5"
-          style={{ color: "#94A3B8" }}>
-          <Settings size={16} strokeWidth={1.5} />
-          <span style={{ fontFamily: "var(--font-dm-sans, sans-serif)" }}>Settings</span>
-        </button>
-
-        {/* User card */}
-        <div className="mt-3 p-3 rounded-xl" style={{ background: "#111827", border: "1px solid #1E2D45" }}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-              style={{ background: `${accentColor}20`, color: accentColor, fontFamily: "var(--font-syne, sans-serif)" }}>
-              {userName.split(" ").map(n => n[0]).join("").slice(0, 2)}
+              <Sparkles
+                size={20}
+                style={{
+                  color: accentColor,
+                }}
+              />
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium truncate text-white" style={{ fontFamily: "var(--font-syne, sans-serif)" }}>
-                {userName}
+
+            <div>
+              <h1 className="text-lg font-black tracking-tight text-white">
+                TalentLens
+              </h1>
+
+              <p
+                className="mt-1 text-[11px] font-bold uppercase tracking-[0.25em]"
+                style={{
+                  color: accentColor,
+                }}
+              >
+                {roleLabels[role]}
               </p>
-              {userLocation && (
-                <p className="text-xs truncate" style={{ color: "#4A5C74" }}>{userLocation}</p>
-              )}
             </div>
-            <button className="ml-auto text-gray-600 hover:text-gray-400 transition-colors shrink-0">
-              <LogOut size={14} />
+          </div>
+        </div>
+
+        {/* Security Card */}
+        <div className="px-5">
+          {/* <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-xl"
+                style={{
+                  background: `${accentColor}15`,
+                }}
+              >
+                <Shield
+                  size={18}
+                  style={{
+                    color: accentColor,
+                  }}
+                />
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-white">
+                  AI Talent Signal
+                </p>
+
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                  Intelligent evidence mapping and role-based
+                  analytics.
+                </p>
+              </div>
+            </div>
+          </div> */}
+        </div>
+
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto px-4 py-6">
+          <div className="mb-4 px-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500">
+              Navigation
+            </p>
+          </div>
+
+          <nav className="space-y-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+
+              const isActive =
+                pathname === item.href ||
+                pathname.startsWith(item.href + "/");
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`group relative flex items-center gap-4 overflow-hidden rounded-2xl px-4 py-3 transition-all duration-300 ${
+                    isActive
+                      ? "text-white"
+                      : "text-slate-400 hover:bg-white/[0.03] hover:text-white"
+                  }`}
+                  style={{
+                    background: isActive
+                      ? `linear-gradient(90deg, ${accentColor}20 0%, transparent 100%)`
+                      : undefined,
+                    border: isActive
+                      ? `1px solid ${accentColor}20`
+                      : "1px solid transparent",
+                  }}
+                >
+                  {/* Active glow */}
+                  {isActive && (
+                    <div
+                      className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full"
+                      style={{
+                        background: accentColor,
+                      }}
+                    />
+                  )}
+
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${
+                      isActive
+                        ? ""
+                        : "bg-white/[0.03] group-hover:bg-white/[0.06]"
+                    }`}
+                    style={{
+                      background: isActive
+                        ? `${accentColor}15`
+                        : undefined,
+                    }}
+                  >
+                    <Icon
+                      size="18"
+                      strokeWidth={isActive ? 2.4 : 1.8}
+                      style={{
+                        color: isActive
+                          ? accentColor
+                          : undefined,
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex flex-1 items-center justify-between">
+                    <span className="text-sm font-medium tracking-wide">
+                      {item.label}
+                    </span>
+
+                    <ChevronRight
+                      size={15}
+                      className={`transition-all duration-300 ${
+                        isActive
+                          ? "translate-x-0 opacity-100"
+                          : "-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"
+                      }`}
+                    />
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Bottom */}
+        <div className="border-t border-white/5 p-4">
+          {/* Utility Buttons */}
+          <div className="mb-4 space-y-2">
+            <button className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-400 transition-all duration-300 hover:bg-white/[0.03] hover:text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.03]">
+                <Bell size={17} />
+              </div>
+
+              <span className="font-medium">
+                Notifications
+              </span>
+
+              <span
+                className="ml-auto rounded-full px-2 py-1 text-[10px] font-bold"
+                style={{
+                  background: `${accentColor}15`,
+                  color: accentColor,
+                }}
+              >
+                3
+              </span>
             </button>
+
+            <button className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-400 transition-all duration-300 hover:bg-white/[0.03] hover:text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.03]">
+                <Settings size={17} />
+              </div>
+
+              <span className="font-medium">
+                Settings
+              </span>
+            </button>
+          </div>
+
+          {/* User Card */}
+          <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-4 backdrop-blur-xl">
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-black"
+                style={{
+                  background: `${accentColor}15`,
+                  color: accentColor,
+                }}
+              >
+                {userName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .slice(0, 2)}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-white">
+                  {userName}
+                </p>
+
+                <p className="truncate text-xs text-slate-500">
+                  {userLocation || "Active Session"}
+                </p>
+              </div>
+
+              <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.03] text-slate-500 transition-all duration-300 hover:bg-red-500/10 hover:text-red-400">
+                <LogOut size={16} />
+              </button>
+            </div>
           </div>
         </div>
       </div>

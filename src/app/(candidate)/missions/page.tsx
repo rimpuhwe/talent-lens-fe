@@ -1,246 +1,229 @@
 "use client";
 
-import { useState } from "react";
-import { Clock, ChevronRight, Play, CheckCircle, Lock, Send, AlertCircle } from "lucide-react";
-import Sidebar from "@/components/layout/Sidebar";
-import { ModuleBadge, SectionHeader } from "@/components/shared";
-import { mockCandidateProfile, mockMissions, mockMissionAttempts } from "@/lib/mock-data";
-import type { Mission } from "@/types";
+import { useEffect, useState } from "react";
+import { ArrowRight, BrainCircuit, CheckCircle2, Play, ShieldCheck, Sparkles, Target, Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { aiService } from "@/services/job.service";
+import { evidenceService, profileService } from "@/services/profile.service";
+import type { CandidateProfile } from "@/types/api.types";
 
-export default function MissionsPage() {
-  const [activeMission, setActiveMission] = useState<Mission | null>(null);
-  const [response, setResponse] = useState("");
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+const moduleOptions = [
+  { type: "A", title: "Skill Proof", description: "A practical real-world mission." },
+  { type: "B", title: "Scenario Judgment", description: "A professional dilemma requiring judgment." },
+  { type: "C", title: "Learning Agility", description: "A novel concept applied under pressure." },
+  { type: "D", title: "Communication Proof", description: "A structured stakeholder-facing response." },
+];
 
-  const completedIds = mockMissionAttempts.map(a => a.mission_id);
+export default function MissionCenter() {
+  const [profile, setProfile] = useState<CandidateProfile | null>(null);
+  const [selectedRole, setSelectedRole] = useState("");
+  const [moduleType, setModuleType] = useState("A");
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [evaluation, setEvaluation] = useState<any | null>(null);
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleStart = (mission: Mission) => {
-    setActiveMission(mission);
-    setTimeLeft(mission.time_limit_min * 60);
-    setResponse("");
-    setSubmitted(false);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [profileData, resultData] = await Promise.allSettled([
+          profileService.getMe(),
+          evidenceService.getMyResults(),
+        ]);
+
+        if (profileData.status === "fulfilled") {
+          setProfile(profileData.value);
+          setSelectedRole(profileData.value.jobRoles?.[0] || "");
+        }
+        if (resultData.status === "fulfilled") {
+          setResults(Array.isArray(resultData.value) ? resultData.value : []);
+        }
+      } catch {
+        setResults([]);
+      }
+    };
+
+    void load();
+  }, []);
+
+  const generateMission = async () => {
+    setLoading(true);
+    setError("");
+    setEvaluation(null);
+
+    try {
+      const targetRole = selectedRole || profile?.jobRoles?.[0] || "Software Engineer";
+      const [backendModule, aiModule] = await Promise.allSettled([
+        evidenceService.requestModule({ role: targetRole, moduleType }),
+        aiService.generateModule({
+          role: targetRole,
+          moduleType,
+          job_context: profile?.professionalProfile || undefined,
+        }),
+      ]);
+
+      const backendQuestion =
+        backendModule.status === "fulfilled" ? backendModule.value?.generatedQuestion : "";
+      const aiQuestion = aiModule.status === "fulfilled" ? aiModule.value?.question : "";
+
+      setQuestion(aiQuestion || backendQuestion || "Describe how you would solve a real-world problem for this role.");
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Unable to generate mission.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = () => {
-    if (response.trim().length < 50) return;
-    setSubmitted(true);
+  const evaluateAnswer = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await aiService.evaluateMission({
+        role: selectedRole || "Candidate",
+        question,
+        answer,
+      });
+      setEvaluation(result);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Unable to evaluate answer.");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  if (activeMission && !submitted) {
-    return (
-      <div className="flex min-h-screen" style={{ background: "#080D1A" }}>
-        <Sidebar role="candidate" userName={mockCandidateProfile.full_name} userLocation={mockCandidateProfile.location} />
-        <main className="flex-1 ml-64 p-8 bg-grid">
-          {/* Mission header */}
-          <div className="flex items-center justify-between mb-6 animate-fade-up">
-            <div>
-              <p style={{ color: "#10B981", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                Active Mission
-              </p>
-              <h1 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.5rem", color: "white", letterSpacing: "-0.02em", marginTop: 4 }}>
-                {activeMission.title}
-              </h1>
-            </div>
-            {/* Timer */}
-            <div className="flex items-center gap-2 px-5 py-3 rounded-xl" style={{ background: "#162033", border: "1px solid #253350" }}>
-              <Clock size={16} color="#F59E0B" />
-              <span style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, fontSize: "1.1rem", color: "#F59E0B", letterSpacing: "-0.02em" }}>
-                {activeMission.time_limit_min}:00
-              </span>
-              <span style={{ color: "#4A5C74", fontSize: "0.75rem" }}>remaining</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-6">
-            {/* Mission brief */}
-            <div className="col-span-5 space-y-4">
-              <div className="card-base p-6 animate-fade-up" style={{ animationDelay: "100ms" }}>
-                <div className="flex items-center gap-2 mb-4">
-                  <ModuleBadge type={activeMission.module_type} />
-                  <span style={{ color: "#4A5C74", fontSize: "0.72rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>
-                    <Clock size={10} className="inline mr-1" />{activeMission.time_limit_min} minutes
-                  </span>
-                </div>
-                <h3 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", marginBottom: 12, fontSize: "0.9rem" }}>
-                  The Scenario
-                </h3>
-                <p style={{ color: "#94A3B8", fontSize: "0.85rem", lineHeight: 1.7, fontFamily: "var(--font-dm-sans, sans-serif)" }}>
-                  {activeMission.scenario}
-                </p>
-              </div>
-              <div className="card-base p-6 animate-fade-up" style={{ animationDelay: "150ms" }}>
-                <h3 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", marginBottom: 12, fontSize: "0.9rem" }}>
-                  Your Deliverable
-                </h3>
-                <p style={{ color: "#94A3B8", fontSize: "0.85rem", lineHeight: 1.7, fontFamily: "var(--font-dm-sans, sans-serif)" }}>
-                  {activeMission.deliverable}
-                </p>
-              </div>
-              <div className="card-base p-6 animate-fade-up" style={{ animationDelay: "200ms" }}>
-                <h3 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", marginBottom: 12, fontSize: "0.9rem" }}>
-                  How You&apos;re Scored
-                </h3>
-                <div className="space-y-3">
-                  {activeMission.scoring_rubric.map((r) => (
-                    <div key={r.dimension} className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#10B98115", border: "1px solid #10B98130" }}>
-                        <span style={{ color: "#10B981", fontSize: "0.65rem", fontWeight: 700, fontFamily: "var(--font-syne, sans-serif)" }}>{r.max_score}</span>
-                      </div>
-                      <div>
-                        <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, color: "white", fontSize: "0.78rem" }}>{r.dimension}</p>
-                        <p style={{ color: "#4A5C74", fontSize: "0.72rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>{r.indicators}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Response area */}
-            <div className="col-span-7 animate-fade-up" style={{ animationDelay: "150ms" }}>
-              <div className="card-base p-6 h-full flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", fontSize: "0.9rem" }}>Your Response</h3>
-                  <span style={{ color: response.length > 50 ? "#10B981" : "#4A5C74", fontSize: "0.72rem", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600 }}>
-                    {response.length} chars {response.length < 200 && "· min 200 recommended"}
-                  </span>
-                </div>
-                <textarea
-                  value={response}
-                  onChange={(e) => setResponse(e.target.value)}
-                  placeholder={`Write your response here...\n\nBe specific. Reference the scenario. Show your reasoning.\n\nAI will evaluate your response on all ${activeMission.scoring_rubric.length} dimensions above.`}
-                  className="flex-1 w-full resize-none outline-none text-sm leading-relaxed"
-                  style={{
-                    background: "#080D1A", border: "1px solid #1E2D45", borderRadius: 12,
-                    padding: 20, color: "#EDF2F7", fontFamily: "var(--font-dm-sans, sans-serif)",
-                    minHeight: 380, caretColor: "#10B981",
-                  }}
-                />
-                {response.length < 50 && response.length > 0 && (
-                  <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg" style={{ background: "#F59E0B10", border: "1px solid #F59E0B30" }}>
-                    <AlertCircle size={13} color="#F59E0B" />
-                    <p style={{ color: "#F59E0B", fontSize: "0.75rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>
-                      Your response is too short. Aim for at least 150 words for a meaningful evaluation.
-                    </p>
-                  </div>
-                )}
-                <button
-                  onClick={handleSubmit}
-                  disabled={response.trim().length < 50}
-                  className="mt-4 btn-primary px-6 py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ fontFamily: "var(--font-syne, sans-serif)" }}>
-                  <Send size={14} /> Submit for AI Evaluation
-                </button>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (submitted && activeMission) {
-    return (
-      <div className="flex min-h-screen" style={{ background: "#080D1A" }}>
-        <Sidebar role="candidate" userName={mockCandidateProfile.full_name} userLocation={mockCandidateProfile.location} />
-        <main className="flex-1 ml-64 p-8 bg-grid flex items-center justify-center">
-          <div className="text-center max-w-md animate-fade-up">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: "#10B98120", border: "1px solid #10B98140" }}>
-              <CheckCircle size={28} color="#10B981" />
-            </div>
-            <h2 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.5rem", color: "white", letterSpacing: "-0.02em", marginBottom: 12 }}>
-              Mission Submitted
-            </h2>
-            <p style={{ color: "#94A3B8", fontSize: "0.9rem", fontFamily: "var(--font-dm-sans, sans-serif)", lineHeight: 1.7, marginBottom: 24 }}>
-              Gemini AI is evaluating your response across all {activeMission.scoring_rubric.length} dimensions. Results will be ready in under 60 seconds.
-            </p>
-            <div className="flex items-center justify-center gap-3">
-              <button onClick={() => { setActiveMission(null); setSubmitted(false); }}
-                className="btn-primary px-6 py-2.5 rounded-xl text-sm" style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600 }}>
-                View Results
-              </button>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#080D1A" }}>
-      <Sidebar role="candidate" userName={mockCandidateProfile.full_name} userLocation={mockCandidateProfile.location} />
-      <main className="flex-1 ml-64 p-8 bg-grid">
-        <div className="mb-8 animate-fade-up">
-          <p style={{ color: "#10B981", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            Evidence Engine
-          </p>
-          <h1 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "1.75rem", color: "white", letterSpacing: "-0.02em", marginTop: 4 }}>
-            Missions
-          </h1>
-          <p style={{ color: "#4A5C74", fontSize: "0.85rem", fontFamily: "var(--font-dm-sans, sans-serif)", marginTop: 2 }}>
-            Complete missions to build verified proof of your capabilities.
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#050A15] p-8 text-white">
+      <div className="mx-auto">
+        <header className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-accent-emerald">
+              <span className="text-xs font-black uppercase tracking-widest">AI Capability Missions</span>
+            </div>
+            <h1 className="text-4xl font-black tracking-tight">Mission Center</h1>
+            <p className="mt-2 text-slate-400">Generate, train, and evaluate role-specific assessments through the Talent AI service.</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-right">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Evidence results</p>
+            <p className="text-2xl font-black text-accent-emerald">{results.length}</p>
+          </div>
+        </header>
 
-        <div className="space-y-4">
-          {mockMissions.map((mission, i) => {
-            const isCompleted = completedIds.includes(mission.id);
-            const attempt = mockMissionAttempts.find(a => a.mission_id === mission.id);
-            return (
-              <div key={mission.id} className="card-base p-6 animate-fade-up" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="flex items-start justify-between gap-6">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <ModuleBadge type={mission.module_type} />
-                      <span className="flex items-center gap-1" style={{ color: "#4A5C74", fontSize: "0.72rem", fontFamily: "var(--font-dm-sans, sans-serif)" }}>
-                        <Clock size={10} /> {mission.time_limit_min} minutes
-                      </span>
-                      {isCompleted && (
-                        <div className="flex items-center gap-1" style={{ color: "#10B981", fontSize: "0.72rem" }}>
-                          <CheckCircle size={11} /> Completed
-                        </div>
-                      )}
-                    </div>
-                    <h3 style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 700, color: "white", fontSize: "1rem", marginBottom: 8 }}>
-                      {mission.title}
-                    </h3>
-                    <p style={{ color: "#94A3B8", fontSize: "0.82rem", lineHeight: 1.6, fontFamily: "var(--font-dm-sans, sans-serif)", maxWidth: 600 }}>
-                      {mission.scenario.slice(0, 160)}...
-                    </p>
-                    <div className="flex items-center gap-2 mt-4">
-                      {mission.scoring_rubric.map((r) => (
-                        <span key={r.dimension} style={{ background: "#111827", border: "1px solid #1E2D45", color: "#4A5C74", padding: "2px 8px", borderRadius: 4, fontSize: "0.65rem", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600 }}>
-                          {r.dimension}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    {isCompleted ? (
-                      <div className="text-center">
-                        <p style={{ fontFamily: "var(--font-syne, sans-serif)", fontWeight: 800, fontSize: "2rem", color: "white", letterSpacing: "-0.03em" }}>
-                          {attempt?.total_score}<span style={{ color: "#4A5C74", fontSize: "1rem" }}>/100</span>
-                        </p>
-                        <button onClick={() => handleStart(mission)}
-                          className="mt-2 text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 transition-colors hover:bg-white/5"
-                          style={{ border: "1px solid #253350", color: "#94A3B8", fontFamily: "var(--font-syne, sans-serif)", fontWeight: 600 }}>
-                          Re-attempt <ChevronRight size={12} />
-                        </button>
-                      </div>
-                    ) : (
-                      <button onClick={() => handleStart(mission)}
-                        className="btn-primary px-6 py-3 rounded-xl flex items-center gap-2 text-sm">
-                        <Play size={14} /> Start Mission
-                      </button>
-                    )}
-                  </div>
+        {error && <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">{error}</div>}
+
+        <section className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-4">
+          {moduleOptions.map((module) => (
+            <button
+              key={module.type}
+              onClick={() => setModuleType(module.type)}
+              className={`rounded-3xl border p-6 text-left transition-all ${moduleType === module.type ? "border-accent-emerald bg-accent-emerald/10" : "border-white/10 bg-white/[0.04] hover:border-white/20"}`}
+            >
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-accent-emerald">
+                <Target size={22} />
+              </div>
+              <p className="text-xs font-black uppercase tracking-widest text-slate-500">Module {module.type}</p>
+              <h3 className="mt-1 font-black">{module.title}</h3>
+              <p className="mt-2 text-sm text-slate-400">{module.description}</p>
+            </button>
+          ))}
+        </section>
+
+        <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-7 xl:col-span-5">
+            <h2 className="text-xl font-black">Mission Setup</h2>
+            <p className="mt-2 text-sm text-slate-400">Choose a role and generate a fresh assessment prompt.</p>
+
+            <div className="mt-6 space-y-5">
+              <div>
+                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-500">Target Role</label>
+                <input
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  placeholder="Frontend Engineer"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-4 outline-none focus:border-accent-emerald"
+                />
+              </div>
+              <Button onClick={generateMission} disabled={loading} className="w-full rounded-2xl bg-accent-emerald py-7 font-black text-white hover:bg-emerald-600">
+                {loading ? "Generating..." : "Generate Mission"}
+                <Sparkles className="ml-2" size={18} />
+              </Button>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-accent-emerald/20 bg-accent-emerald/10 p-5">
+              <div className="mb-2 flex items-center gap-2 font-bold text-accent-emerald">
+                <BrainCircuit size={18} /> How it works
+              </div>
+              <p className="text-sm leading-relaxed text-slate-300">
+                Talent AI generates a role-specific challenge, then evaluates your answer for strengths, weaknesses, and an objective score.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-7 xl:col-span-7">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black">Active Mission</h2>
+                <p className="text-sm text-slate-400">Answer the generated prompt to train your evidence profile.</p>
+              </div>
+              <ShieldCheck className="text-accent-emerald" />
+            </div>
+
+            {question ? (
+              <div className="space-y-5">
+                <div className="rounded-2xl border border-white/10 bg-[#0A0F1C] p-5">
+                  <p className="text-sm leading-relaxed text-slate-200">{question}</p>
+                </div>
+                <textarea
+                  rows={8}
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="Write your structured response here..."
+                  className="w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-5 py-4 outline-none focus:border-accent-emerald"
+                />
+                <Button onClick={evaluateAnswer} disabled={loading || !answer.trim()} className="w-full rounded-2xl bg-white py-7 font-black text-black hover:bg-slate-100">
+                  Evaluate Answer
+                  <Play className="ml-2" size={16} />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex min-h-[360px] flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 p-8 text-center">
+                <Target className="mb-4 text-slate-600" size={42} />
+                <p className="font-bold">No active mission</p>
+                <p className="mt-2 max-w-sm text-sm text-slate-500">Generate a module to begin practicing and collecting capability evidence.</p>
+              </div>
+            )}
+
+            {evaluation && (
+              <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="font-black text-white">Evaluation Complete</p>
+                  <span className="rounded-xl bg-emerald-500/20 px-3 py-1 font-black text-emerald-300">{Math.round(evaluation.score)}/100</span>
+                </div>
+                <p className="text-sm text-slate-300">{evaluation.feedback}</p>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <InsightList title="Strengths" items={evaluation.strengths || []} />
+                  <InsightList title="Weaknesses" items={evaluation.weaknesses || []} />
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </main>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function InsightList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/10 p-4">
+      <p className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400">
+        <CheckCircle2 size={13} /> {title}
+      </p>
+      <ul className="space-y-2 text-sm text-slate-300">
+        {items.length ? items.map((item) => <li key={item}>{item}</li>) : <li>No items returned.</li>}
+      </ul>
     </div>
   );
 }

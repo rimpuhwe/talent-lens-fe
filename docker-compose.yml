@@ -1,0 +1,11 @@
+services:
+  talent-lens-fe:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: talent-lens-fe
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: always

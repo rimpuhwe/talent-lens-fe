@@ -29,25 +29,15 @@ import {
   profileService,
 } from "@/services/profile.service";
 
-import type { CandidateProfile } from "@/types/api.types";
-
-type EvidenceResult = {
-  id: number;
-  score?: number;
-  feedback?: string;
-  candidateAnswer?: string;
-  evidenceModule?: {
-    targetRole?: string;
-    moduleType?: string;
-    generatedQuestion?: string;
-    submitted?: boolean;
-  };
-};
+import type {
+  CandidateProfile,
+  EvidenceSubmission,
+} from "@/types/api.types";
 
 export default function CandidateDashboard() {
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [status, setStatus] = useState<Record<string, any> | null>(null);
-  const [results, setResults] = useState<EvidenceResult[]>([]);
+  const [results, setResults] = useState<EvidenceSubmission[]>([]);
   const [roleScores, setRoleScores] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -313,9 +303,9 @@ export default function CandidateDashboard() {
           </div>
 
           <div className="space-y-4">
-            {results.slice(0, 5).map((result) => (
+            {results.slice(0, 5).map((result, index) => (
               <div
-                key={result.id}
+                key={result.id ?? `evidence-${index}`}
                 className="rounded-2xl border border-slate-800 bg-[#111827]/60 p-5"
               >
                 <div className="mb-3 flex items-start justify-between gap-4">

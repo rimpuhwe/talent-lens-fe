@@ -19,8 +19,10 @@ export default function MissionCenter() {
   const [selectedRole, setSelectedRole] = useState("");
   const [moduleType, setModuleType] = useState("A");
   const [question, setQuestion] = useState("");
+  const [moduleId, setModuleId] = useState<number | null>(null);
   const [answer, setAnswer] = useState("");
   const [evaluation, setEvaluation] = useState<any | null>(null);
+  const [submitted, setSubmitted] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -52,6 +54,8 @@ export default function MissionCenter() {
     setLoading(true);
     setError("");
     setEvaluation(null);
+    setSubmitted(false);
+    setModuleId(null);
 
     try {
       const targetRole = selectedRole || profile?.jobRoles?.[0] || "Software Engineer";
@@ -64,11 +68,20 @@ export default function MissionCenter() {
         }),
       ]);
 
-      const backendQuestion =
-        backendModule.status === "fulfilled" ? backendModule.value?.generatedQuestion : "";
+      const backend =
+        backendModule.status === "fulfilled" ? backendModule.value : null;
+      const backendQuestion = backend?.generatedQuestion ?? "";
       const aiQuestion = aiModule.status === "fulfilled" ? aiModule.value?.question : "";
 
-      setQuestion(aiQuestion || backendQuestion || "Describe how you would solve a real-world problem for this role.");
+      if (backend?.id) {
+        setModuleId(backend.id);
+      }
+
+      setQuestion(
+        aiQuestion ||
+          backendQuestion ||
+          "Describe how you would solve a real-world problem for this role."
+      );
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Unable to generate mission.");
     } finally {
@@ -81,12 +94,30 @@ export default function MissionCenter() {
     setError("");
 
     try {
-      const result = await aiService.evaluateMission({
-        role: selectedRole || "Candidate",
-        question,
-        answer,
-      });
-      setEvaluation(result);
+      const targetRole = selectedRole || profile?.jobRoles?.[0] || "Candidate";
+
+      const [aiResult, backendResult] = await Promise.allSettled([
+        aiService.evaluateMission({
+          role: targetRole,
+          question,
+          answer,
+        }),
+        moduleId
+          ? evidenceService.submit({ moduleId, answer })
+          : Promise.reject(new Error("No module id from backend")),
+      ]);
+
+      if (aiResult.status === "fulfilled") {
+        setEvaluation(aiResult.value);
+      } else {
+        throw aiResult.reason;
+      }
+
+      if (backendResult.status === "fulfilled") {
+        setSubmitted(true);
+        const updated = await evidenceService.getMyResults();
+        setResults(Array.isArray(updated) ? updated : []);
+      }
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Unable to evaluate answer.");
     } finally {
@@ -183,7 +214,7 @@ export default function MissionCenter() {
                   className="w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-5 py-4 outline-none focus:border-accent-emerald"
                 />
                 <Button onClick={evaluateAnswer} disabled={loading || !answer.trim()} className="w-full rounded-2xl bg-white py-7 font-black text-black hover:bg-slate-100">
-                  Evaluate Answer
+                  {loading ? "Submitting..." : submitted ? "Re-evaluate Answer" : "Submit & Evaluate"}
                   <Play className="ml-2" size={16} />
                 </Button>
               </div>

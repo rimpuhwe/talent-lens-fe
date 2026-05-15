@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { apiEnv } from "@/lib/api/env";
 import { normalizeRole, type BackendUserRole } from "@/lib/auth-routes";
 
 type BackendLoginResponse = {
@@ -58,8 +59,7 @@ async function parseBackendLoginResponse(response: Response) {
 }
 
 async function requestBackendLogin(email: string, password: string) {
-  const endpoint =
-    "https://talent-lens-be-production.up.railway.app/api/auth/login";
+  const endpoint = `${apiEnv.mainApiUrl}/api/auth/login`;
 
   const urlEncoded = new URLSearchParams({
     username: email,

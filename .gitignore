@@ -20,6 +20,9 @@
 # production
 /build
 
+# demo recordings
+/demo-videos/
+
 # misc
 .DS_Store
 *.pem

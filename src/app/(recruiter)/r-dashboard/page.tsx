@@ -41,7 +41,9 @@ export default function RecruiterDashboard() {
             job_signal: {
               jobPosition: first.jobPosition || "Open role",
               jobDescription: first.jobDescription || "No description",
-              requiredSkills: (first.skillsNeeded || first.requiredSkills || []).map((skill: { skillSetName: string }) => skill.skillSetName),
+              requiredSkills: (first.skillsNeeded ?? []).map(
+                (skill) => skill.skillSetName ?? ""
+              ).filter(Boolean),
               experienceLevel: first.experienceLevel,
             },
           });
@@ -158,7 +160,7 @@ export default function RecruiterDashboard() {
                     </div>
                     <p className="line-clamp-1 text-sm text-slate-400">{job.jobDescription}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {(job.skillsNeeded || job.requiredSkills || []).slice(0, 5).map((skill) => (
+                      {(job.skillsNeeded ?? []).slice(0, 5).map((skill) => (
                         <span key={skill.skillSetName} className="rounded-md border border-[#3B82F6]/20 bg-[#3B82F6]/10 px-2 py-1 text-xs font-bold text-[#3B82F6]">{skill.skillSetName}</span>
                       ))}
                     </div>

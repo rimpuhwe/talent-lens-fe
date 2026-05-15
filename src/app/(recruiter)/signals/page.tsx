@@ -30,6 +30,8 @@ export default function JobSignals() {
     workType: "Remote",
   });
 
+  
+
   React.useEffect(() => {
     const loadJobs = async () => {
       try {
@@ -98,32 +100,6 @@ export default function JobSignals() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // --- NEW: AI Template Generation Logic ---
-  const handleUseAITemplate = () => {
-    setIsGenerating(true);
-    setShowForm(true); // Open modal if triggered from outside
-
-    // Simulate a brief AI "thinking" delay
-    setTimeout(() => {
-      // Use currently selected role, or default to Data & Analytics
-      const role = form.role_family || "Data & Analytics";
-      // Fallback to Data template if we don't have a specific mock written for the selected role
-      const template = AI_TEMPLATES[role] || AI_TEMPLATES["Data & Analytics"];
-
-      setForm(prev => ({
-        ...prev,
-        role_family: role,
-        title: template.title,
-        company_context: template.company_context,
-        required_skills: template.required_skills,
-        scenario_types: template.scenario_types,
-        culture_notes: template.culture_notes,
-        timeline_days: template.timeline_days
-      }));
-      setIsGenerating(false);
-    }, 800);
   };
 
   return (

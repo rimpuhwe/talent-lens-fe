@@ -78,7 +78,7 @@ export default function OnboardingPage() {
           gender: data?.gender ?? "MALE",
           professionalProfile: data?.professionalProfile ?? "",
           linkedInProfile: data?.linkedInProfile ?? "",
-          biography: data?.biography ?? data?.Biography ?? "",
+          biography: data?.biography ?? "",
           workConditions: data?.workConditions ?? "OPEN",
           jobRoles: Array.isArray(data?.jobRoles) ? data.jobRoles.slice(0, 3) : [],
         }));

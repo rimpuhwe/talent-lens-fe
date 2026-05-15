@@ -1,406 +1,308 @@
 "use client";
 
-import {
-  ExternalLink,
-  TrendingUp,
-  Clock,
-  AlertCircle,
-  Target,
-  Sparkles,
-  BrainCircuit,
-  ArrowUpRight,
-} from "lucide-react";
-
+import { useMemo } from "react";
+import { AlertCircle, Target, TrendingUp } from "lucide-react";
 import Sidebar from "@/components/layout/Sidebar";
-import {
-  ProgressBar,
-  SectionHeader,
-} from "@/components/shared";
+import { ProgressBar, SectionHeader } from "@/components/shared";
+import { useEvidenceResults, useRoleScores } from "@/lib/api/hooks/use-evidence";
+import { useProfile } from "@/lib/api/hooks/use-profile";
 
-import {
-  mockCandidateProfile,
-  mockLearningRecs,
-  mockMissionAttempts,
-} from "@/lib/mock-data";
-
-// Helper function for dynamic grading colors
-const getGradeColor = (score: number) => {
-  if (score < 50) return "#F59E0B"; // Yellow
-  if (score <= 75) return "#334DAF"; // Blue
-  return "#10B981"; // Green
+const THRESHOLDS = {
+  skill: 75,
+  behavior: 75,
+  learning: 75,
+  culture: 70,
 };
 
-// F5: Updated stage-based progression
-const missionProgressionData = [
-  { stage: "Skill Proof", score: 62 },
-  { stage: "Judgment", score: 68 },
-  { stage: "Learning", score: 82 },
-];
-
-const dimensionConfig = [
-  {
-    key: "skill_proof_score",
-    label: "Skill Proof",
-    color: "#10B981",
-    score: 74,
-    threshold: 80,
-  },
-  {
-    key: "work_behavior_score",
-    label: "Work Behavior",
-    color: "#F59E0B",
-    score: 68,
-    threshold: 75,
-  },
-  {
-    key: "learning_agility_score",
-    label: "Learning Agility",
-    color: "#3B82F6",
-    score: 82,
-    threshold: 75,
-  },
-  {
-    key: "culture_fit_score",
-    label: "Communication",
-    color: "#A855F7",
-    score: 0,
-    threshold: 70,
-  },
-];
+type DimensionRow = {
+  key: string;
+  label: string;
+  color: string;
+  score: number;
+  threshold: number;
+};
 
 export default function GapReportPage() {
-  const profile = mockCandidateProfile;
+  const { data: profile } = useProfile();
+  const { data: results = [] } = useEvidenceResults();
+  const { data: roleScores = {} } = useRoleScores();
 
-  const weakDimensions = dimensionConfig.filter(
-    (d) => d.score < d.threshold
+  const fullName =
+    `${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`.trim() || "Candidate";
+
+  const primaryTss = profile?.roleTssScores?.[0];
+
+  const dimensionConfig = useMemo<DimensionRow[]>(
+    () => [
+      {
+        key: "skill",
+        label: "Skill Proof",
+        color: "#10B981",
+        score: Math.round(primaryTss?.skillScore ?? 0),
+        threshold: THRESHOLDS.skill,
+      },
+      {
+        key: "behavior",
+        label: "Work Behavior",
+        color: "#F59E0B",
+        score: Math.round(primaryTss?.behaviorScore ?? 0),
+        threshold: THRESHOLDS.behavior,
+      },
+      {
+        key: "learning",
+        label: "Learning Agility",
+        color: "#3B82F6",
+        score: Math.round(primaryTss?.learningScore ?? 0),
+        threshold: THRESHOLDS.learning,
+      },
+      {
+        key: "culture",
+        label: "Communication",
+        color: "#A855F7",
+        score: Math.round(primaryTss?.cultureScore ?? 0),
+        threshold: THRESHOLDS.culture,
+      },
+    ],
+    [primaryTss]
   );
 
-  const strongDimensions = dimensionConfig.filter(
-    (d) => d.score >= d.threshold
+  const weakDimensions = dimensionConfig.filter((d) => d.score < d.threshold);
+  const strongDimensions = dimensionConfig.filter((d) => d.score >= d.threshold);
+
+  const learningInsights = useMemo(
+    () =>
+      results
+        .filter((result) => result.feedback)
+        .slice(0, 5)
+        .map((result) => ({
+          id: String(result.id),
+          title:
+            result.evidenceModule?.targetRole ??
+            result.evidenceModule?.moduleType ??
+            "Evidence module",
+          feedback: result.feedback ?? "",
+          score: Math.round(result.score ?? 0),
+        })),
+    [results]
   );
+
+  const roleProgression = Object.entries(roleScores).map(([role, score]) => ({
+    role,
+    score: Math.round(score),
+  }));
 
   return (
     <div className="min-h-screen bg-[#050A15] text-slate-300">
       <Sidebar
         role="candidate"
-        userName={profile.full_name}
-        userLocation={profile.location}
+        userName={fullName}
+        userLocation={profile?.workConditions ?? profile?.jobRoles?.[0] ?? "OPEN"}
       />
 
-      <main className="min-h-screen">
-        <div className="relative overflow-hidden">
-          {/* Background */}
-          <div className="absolute inset-0">
-            <div className="absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 blur-3xl" />
-
-            <div className="absolute inset-0" />
-          </div>
-
-          {/* Content */}
-          <div className="relative z-10 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 xl:px-10">
-            <div className="mx-auto max-w-12xl">
-              {/* Header */}
-              <div className="mb-10">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2">
-                  
-                  <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-emerald-400">
-                    System 3 · Learning Loop
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                  <div>
-                    <h1 className="text-4xl font-black tracking-tight text-white lg:text-5xl">
-                      Skill Gap Report
-                    </h1>
-
-                    <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400 lg:text-base">
-                      Precision learning intelligence powered by
-                      evidence-driven talent analytics.
-                      Identify weaknesses, strengthen proof, and
-                      accelerate growth.
-                    </p>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-5 py-4 backdrop-blur-xl">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                        Weak Areas
-                      </p>
-
-                      <p className="mt-2 text-3xl font-black text-red-400">
-                        {weakDimensions.length}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-5 py-4 backdrop-blur-xl">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                        Strengths
-                      </p>
-
-                      <p className="mt-2 text-3xl font-black text-emerald-400">
-                        {strongDimensions.length}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Overview */}
-              <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-                {/* Weak */}
-                <div className="rounded-3xl border border-red-500/10 bg-[#0A0F1C]/80 p-6 backdrop-blur-xl">
-                  <div className="mb-6 flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-500/10">
-                      <AlertCircle
-                        size={20}
-                        className="text-red-400"
-                      />
-                    </div>
-
-                    <div>
-                      <h2 className="text-lg font-bold text-white">
-                        Gaps to Close
-                      </h2>
-
-                      <p className="text-sm text-slate-400">
-                        Areas below target threshold
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-5">
-                    {weakDimensions.map((d) => (
-                      <div key={d.key}>
-                        <div className="mb-2 flex items-center justify-between">
-                          <span className="text-sm font-semibold text-slate-300">
-                            {d.label}
-                          </span>
-
-                          <span className="text-sm font-bold text-white">
-                            {d.score > 0 ? d.score : "—"}
-                            <span className="ml-1 text-slate-500">
-                              / {d.threshold}
-                            </span>
-                          </span>
-                        </div>
-
-                        <ProgressBar
-                          value={d.score}
-                          color={
-                            d.score === 0
-                              ? "#F43F5E"
-                              : "#F59E0B"
-                          }
-                          height={5}
-                          showLabel={false}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Strong */}
-                <div className="rounded-3xl border border-emerald-500/10 bg-[#0A0F1C]/80 p-6 backdrop-blur-xl">
-                  <div className="mb-6 flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10">
-                      <TrendingUp
-                        size={20}
-                        className="text-emerald-400"
-                      />
-                    </div>
-
-                    <div>
-                      <h2 className="text-lg font-bold text-white">
-                        Core Strengths
-                      </h2>
-
-                      <p className="text-sm text-slate-400">
-                        Dimensions exceeding expectations
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-5">
-                    {strongDimensions.map((d) => (
-                      <div key={d.key}>
-                        <div className="mb-2 flex items-center justify-between">
-                          <span className="text-sm font-semibold text-slate-300">
-                            {d.label}
-                          </span>
-
-                          <span className="text-sm font-bold text-emerald-400">
-                            {d.score}/100
-                          </span>
-                        </div>
-
-                        <ProgressBar
-                          value={d.score}
-                          color={d.color}
-                          height={5}
-                          showLabel={false}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Learning Recommendations */}
-              <div className="mb-8 rounded-3xl border border-white/5 bg-[#0A0F1C]/80 p-7 backdrop-blur-xl">
-                <SectionHeader
-                  title="Learning Bridge"
-                  subtitle="AI-curated micro-learning recommendations"
-                />
-
-                <div className="mt-8 space-y-10">
-                  {mockLearningRecs.map((rec) => (
-                    <div key={rec.id}>
-                      {/* Diagnosis */}
-                      <div className="mb-5 rounded-2xl border border-red-500/10 bg-red-500/[0.03] p-5">
-                        <div className="flex items-start gap-4">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-red-500/10">
-                            <AlertCircle
-                              size={18}
-                              className="text-red-400"
-                            />
-                          </div>
-
-                          <div>
-                            <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white">
-                              {rec.dimension}
-                            </h3>
-
-                            <p className="mt-3 text-sm leading-relaxed text-slate-400">
-                              {rec.gap_diagnosis}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Resources */}
-                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                        {rec.resources.map((resource) => (
-                          <a
-                            key={resource.url}
-                            href={resource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group rounded-2xl border border-white/5 bg-white/[0.03] p-5 transition-all duration-300 hover:border-emerald-500/20 hover:bg-white/[0.05]"
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                <div className="mb-4 flex items-center gap-2">
-                                  <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">
-                                    {resource.platform}
-                                  </span>
-                                </div>
-
-                                <h4 className="text-sm font-bold leading-relaxed text-white transition-colors group-hover:text-emerald-300">
-                                  {resource.title}
-                                </h4>
-
-                                <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
-                                  <Clock size={12} />
-
-                                  <span>
-                                    {
-                                      resource.estimated_hours
-                                    }
-                                    h estimated
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.03] transition-all duration-300 group-hover:bg-emerald-500/10">
-                                <ArrowUpRight
-                                  size={16}
-                                  className="text-slate-500 transition-colors group-hover:text-emerald-400"
-                                />
-                              </div>
-                            </div>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Mission Feedback */}
-              <div className="rounded-3xl border border-white/5 bg-[#0A0F1C]/80 p-7 backdrop-blur-xl">
-                <SectionHeader
-                  title="Per-Mission Improvement Tips"
-                  subtitle="Evidence-based feedback from scored missions"
-                />
-
-                <div className="mt-8 space-y-5">
-                  {mockMissionAttempts.map((attempt) => (
-                    <div
-                      key={attempt.id}
-                      className="rounded-3xl border border-white/5 bg-white/[0.03] p-6"
-                    >
-                      <div className="mb-5 flex flex-wrap items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10">
-                          <Target
-                            size={18}
-                            className="text-emerald-400"
-                          />
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-bold text-white">
-                            {attempt.mission?.title}
-                          </h3>
-
-                          <p className="text-xs text-slate-500">
-                            Mission analysis result
-                          </p>
-                        </div>
-
-                        <div className="ml-auto rounded-2xl border border-emerald-500/10 bg-emerald-500/10 px-4 py-2 text-sm font-black text-emerald-400">
-                          {attempt.total_score}/100
-                        </div>
-                      </div>
-
-                      {/* Improvements */}
-                      <div className="space-y-3">
-                        {attempt.improvements?.map(
-                          (imp, i) => (
-                            <div
-                              key={i}
-                              className="flex items-start gap-3"
-                            >
-                              <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-amber-400" />
-
-                              <p className="text-sm leading-relaxed text-slate-400">
-                                {imp}
-                              </p>
-                            </div>
-                          )
-                        )}
-                      </div>
-
-                      {/* Strengths */}
-                      <div className="mt-6 flex flex-wrap gap-2">
-                        {attempt.strengths?.map((s, i) => (
-                          <span
-                            key={i}
-                            className="rounded-full border border-emerald-500/10 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400"
-                          >
-                            ✓ {s}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <main className="min-h-screen lg:ml-64">
+        <GapReportMain
+          weakDimensions={weakDimensions}
+          strongDimensions={strongDimensions}
+          learningInsights={learningInsights}
+          roleProgression={roleProgression}
+        />
       </main>
+    </div>
+  );
+}
+
+function GapReportMain({
+  weakDimensions,
+  strongDimensions,
+  learningInsights,
+  roleProgression,
+}: {
+  weakDimensions: DimensionRow[];
+  strongDimensions: DimensionRow[];
+  learningInsights: { id: string; title: string; feedback: string; score: number }[];
+  roleProgression: { role: string; score: number }[];
+}) {
+  return (
+    <div className="relative z-10 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 xl:px-10">
+      <div className="mx-auto max-w-6xl">
+        <header className="mb-10">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.25em] text-emerald-400">
+            System 3 · Learning Loop
+          </p>
+          <h1 className="text-4xl font-black tracking-tight text-white lg:text-5xl">
+            Skill Gap Report
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400 lg:text-base">
+            Live gap analysis from your Talent Signal scores and submitted evidence feedback.
+          </p>
+        </header>
+
+        <section className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <DimensionPanel
+            title="Gaps to Close"
+            subtitle="Areas below target threshold"
+            icon={AlertCircle}
+            tone="weak"
+            dimensions={weakDimensions}
+          />
+          <DimensionPanel
+            title="Core Strengths"
+            subtitle="Dimensions exceeding expectations"
+            icon={TrendingUp}
+            tone="strong"
+            dimensions={strongDimensions}
+          />
+        </section>
+
+        <section className="mb-8 rounded-3xl border border-white/5 bg-[#0A0F1C]/80 p-7 backdrop-blur-xl">
+          <SectionHeader
+            title="Evidence Feedback"
+            subtitle="Improvement signals from evaluated missions"
+          />
+          <FeedbackList items={learningInsights} />
+        </section>
+
+        <section className="rounded-3xl border border-white/5 bg-[#0A0F1C]/80 p-7 backdrop-blur-xl">
+          <SectionHeader title="Role Score Progression" subtitle="Scores grouped by target role" />
+          <RoleProgressionList items={roleProgression} />
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function DimensionPanel({
+  title,
+  subtitle,
+  icon: Icon,
+  tone,
+  dimensions,
+}: {
+  title: string;
+  subtitle: string;
+  icon: typeof AlertCircle;
+  tone: "weak" | "strong";
+  dimensions: DimensionRow[];
+}) {
+  const border = tone === "weak" ? "border-red-500/10" : "border-emerald-500/10";
+  const iconWrap =
+    tone === "weak" ? "bg-red-500/10 text-red-400" : "bg-emerald-500/10 text-emerald-400";
+
+  return (
+    <div className={`rounded-3xl border bg-[#0A0F1C]/80 p-6 backdrop-blur-xl ${border}`}>
+      <GapReportDimensionPanelHeader
+        title={title}
+        subtitle={subtitle}
+        Icon={Icon}
+        iconWrap={iconWrap}
+      />
+      <div className="space-y-5">
+        {dimensions.map((dimension) => (
+          <DimensionRowItem key={dimension.key} dimension={dimension} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GapReportDimensionPanelHeader({
+  title,
+  subtitle,
+  Icon,
+  iconWrap,
+}: {
+  title: string;
+  subtitle: string;
+  Icon: typeof AlertCircle;
+  iconWrap: string;
+}) {
+  return (
+    <div className="mb-6 flex items-center gap-3">
+      <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${iconWrap}`}>
+        <Icon size={20} />
+      </div>
+      <div>
+        <h2 className="text-lg font-bold text-white">{title}</h2>
+        <p className="text-sm text-slate-400">{subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
+function DimensionRowItem({ dimension }: { dimension: DimensionRow }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-sm font-semibold text-slate-300">{dimension.label}</span>
+        <span className="text-sm font-bold text-white">
+          {dimension.score > 0 ? dimension.score : "—"}
+          <span className="ml-1 text-slate-500">/ {dimension.threshold}</span>
+        </span>
+      </div>
+      <ProgressBar value={dimension.score} color={dimension.color} height={5} showLabel={false} />
+    </div>
+  );
+}
+
+function FeedbackList({
+  items,
+}: {
+  items: { id: string; title: string; feedback: string; score: number }[];
+}) {
+  return (
+    <div className="mt-8 space-y-4">
+      {items.length ? (
+        items.map((item) => (
+          <article
+            key={item.id}
+            className="rounded-2xl border border-white/5 bg-white/[0.03] p-5"
+          >
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <GapReportTargetIcon />
+                <h3 className="text-sm font-bold text-white">{item.title}</h3>
+              </div>
+              <span className="rounded-xl border border-emerald-500/10 bg-emerald-500/10 px-3 py-1 text-xs font-black text-emerald-400">
+                {item.score}/100
+              </span>
+            </div>
+            <p className="text-sm leading-relaxed text-slate-400">{item.feedback}</p>
+          </article>
+        ))
+      ) : (
+        <p className="text-sm text-slate-500">No evaluated evidence yet. Complete a mission first.</p>
+      )}
+    </div>
+  );
+}
+
+function GapReportTargetIcon() {
+  return (
+    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
+      <Target size={18} className="text-emerald-400" />
+    </div>
+  );
+}
+
+function RoleProgressionList({ items }: { items: { role: string; score: number }[] }) {
+  return (
+    <div className="mt-6 space-y-4">
+      {items.length ? (
+        items.map((item) => (
+          <GapReportRoleRow key={item.role} role={item.role} score={item.score} />
+        ))
+      ) : (
+        <p className="text-sm text-slate-500">Complete missions to populate role progression.</p>
+      )}
+    </div>
+  );
+}
+
+function GapReportRoleRow({ role, score }: { role: string; score: number }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
+      <span className="text-sm font-semibold text-white">{role}</span>
+      <span className="text-sm font-bold text-emerald-400">{score}%</span>
     </div>
   );
 }

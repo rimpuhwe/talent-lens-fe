@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
   LayoutDashboard,
   User,
@@ -99,7 +100,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
 
 const roleColors: Record<UserRole, string> = {
   candidate: "#10B981",
-  recruiter: "#3B82F6",
+  recruiter: "#395886",
   admin: "#F59E0B",
 };
 
@@ -125,6 +126,8 @@ export default function Sidebar({
   const navItems = navByRole[role];
 
   const accentColor = roleColors[role];
+
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-screen w-72 overflow-hidden border-r border-white/5 bg-[#050A15] lg:flex lg:flex-col">
@@ -371,7 +374,7 @@ export default function Sidebar({
             </div>
           </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

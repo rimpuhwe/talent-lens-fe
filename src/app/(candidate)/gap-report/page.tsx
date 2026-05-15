@@ -23,6 +23,20 @@ import {
   mockMissionAttempts,
 } from "@/lib/mock-data";
 
+// Helper function for dynamic grading colors
+const getGradeColor = (score: number) => {
+  if (score < 50) return "#F59E0B"; // Yellow
+  if (score <= 75) return "#334DAF"; // Blue
+  return "#10B981"; // Green
+};
+
+// F5: Updated stage-based progression
+const missionProgressionData = [
+  { stage: "Skill Proof", score: 62 },
+  { stage: "Judgment", score: 68 },
+  { stage: "Learning", score: 82 },
+];
+
 const dimensionConfig = [
   {
     key: "skill_proof_score",
@@ -385,6 +399,7 @@ export default function GapReportPage() {
             </div>
           </div>
         </div>
+
       </main>
     </div>
   );
